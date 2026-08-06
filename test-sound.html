@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Teste de Som</title>
+<style>
+body { font-family: Arial; padding: 20px; }
+button { padding: 15px 30px; font-size: 16px; cursor: pointer; margin: 10px; }
+div { margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<h1>🎲 Teste de Som</h1>
+
+<button onclick="testSound()">CLICA AQUI PARA TESTAR O SOM</button>
+
+<div id="status"></div>
+
+<audio id="testAudio" preload="auto" style="display:none;"><source src="data:audio/mpeg;base64,//PkZAAbtgsRKiTJMJ3iviigGEbgQAMLiPre+BC66OYXHxQ4uCYrAYDoMJrCsnmjJ1CRN7eN8jFYXJ66gIEmW2oyFAw6ZAwQEi4UEk0kAUZWMBQkQYMEkeo3grREi4rFbdoxW0KDChJijC5GAcN7k0CAIAIgJBOgJBHMjBM2kKGRWxZGTyIAoBhwoFCBkEz6BAGA2sZFYwJF9ti0mP+uTsEBJaNGlFYNjAAAYIyeSBA2uFxPUP7YXFbeqIIZ/57120YoYUFDEECBAjRo0aOUQuGyENtryzSAkrP//4aoKBQKAoCBgjJMXRzoUElstqXs5rmywJ7u4QSBwwgAAKBizJC0TQAJDfCJAN33eV6Bmldz0QveFhxb9AxcqgZhxcCCNESgYGBv6IEABFP3dwMcIXoidc0F8AFd3gucAC66U092TNCd+v9c4n9cwgAn7wAdgQMA+HwQlz4Jh+/lAQccwx5oufLvkC73hh8mqMslFO0o2ZZYOXBjhwOIBTeeN543njeeN4pbpklpjIoKPKcIrrjxRXU5UbRXUbRXXHxRsyywFc13oAAK0tRbA0D3Ps+A0D4JyfdgbBEWIGDfCPg57f/+wOcHONeoOcHORh6DbDUgqxsA5K1BzjQByBI7DTBzg//PkRHUe9gsMAGXtij8j+iQCzhsd595G2DkG3xsg57f/gnHrEWCcCsCdiLZEIAI6LAG+k+kGBH/1hABCWAN+AbkMaWkAblIKM2eAb6VEBzhDoohAAOhHohnR9IA3ADcR/SAcgZEggwDfCHbRAN9L/RAN8A33WESAb4RwDcZaIBvgG+3/9QQYDrSb4RAQiVSQQgBvpJBBhDhOZBAKaKKjKs5d8wuj86PpxPIu4CDjecAQktLvl31XsMLKIFlm1P/kmJigEUTLxp/IBTRPU/6Y6nan1AFSl46Yu4XcW4rXpWdj7RExExFO0x0xTOVT//kh3AQwEPHn7xMIcsssTCHywBFhDuYQoEAEBRFAInaBvrfx/Iu4rUXcVoyQCUq38f//1WQ703f/eNUAjRbx0gELx0yqZeNWvmqy3Mf/JAJV" type="audio/mpeg"></source></audio>
+
+<script>
+function testSound() {
+  const status = document.getElementById('status');
+  const audio = document.getElementById('testAudio');
+  
+  status.innerHTML = '⏳ Tentando tocar som...';
+  
+  if(!audio) {
+    status.innerHTML = '❌ Elemento de áudio não encontrado!';
+    return;
+  }
+  
+  try {
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    
+    if(playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          status.innerHTML = '✅ SOM TOCANDO! Se você ouviu, o problema está resolvido!';
+        })
+        .catch(error => {
+          status.innerHTML = '🔊 Áudio bloqueado: ' + error.message + '<br>Tenta clicar no botão novamente.';
+        });
+    } else {
+      status.innerHTML = '✅ SOM TOCANDO (navegador antigo)!';
+    }
+  } catch(e) {
+    status.innerHTML = '❌ Erro: ' + e.message;
+  }
+}
+</script>
+
+</body>
+</html>
