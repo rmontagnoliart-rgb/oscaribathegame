@@ -1,0 +1,31 @@
+🎲 SOM DOS DADOS PRONTO!
+
+Você tem 3 arquivos novos para colocar no seu projeto:
+
+1. index.html (ATUALIZADO com som)
+2. dice-sound.mp3 (NOVO - arquivo de áudio)
+3. FAZER_PUSH.bat (Script para fazer push)
+
+═══════════════════════════════════════════════════════════════
+
+PASSO 1: Baixa os 3 arquivos acima
+
+PASSO 2: Coloca na pasta do seu projeto
+  C:\Users\55119\Desktop\OSCARIBA\
+  
+PASSO 3: Clica 2x no "FAZER_PUSH.bat"
+
+PRONTO! O Git vai fazer push automaticamente.
+
+═══════════════════════════════════════════════════════════════
+
+VERCEL VAI ATUALIZAR EM ~30 SEGUNDOS
+
+Depois é só abrir no navegador e ver:
+  https://oscaribathegame.vercel.app
+
+E fazer F5 para ver a mudança!
+
+═══════════════════════════════════════════════════════════════
+
+Agora quando você rolar os dados, vai ouvir o SOM! 🔊🎲
