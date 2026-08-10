@@ -1,0 +1,11 @@
+{
+  "name": "oscaribathegame",
+  "version": "1.0.0",
+  "description": "Board game - Oscaribas",
+  "author": "rmontagnoli",
+  "private": false,
+  "scripts": {
+    "dev": "python serve.py",
+    "build": "echo 'Vercel handles this automatically'"
+  }
+}
