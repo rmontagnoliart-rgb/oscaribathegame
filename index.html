@@ -243,21 +243,19 @@ window.addEventListener('load', function() {
   .rk.win .nm{color:var(--green)}
 
   /* ---------- svg board (esculpido na arte pintada: caminho/casas fazem parte do mapa) ---------- */
-  .edge{stroke:url(#gradEdge);stroke-width:3.6;stroke-linecap:round;opacity:1;
-    filter:drop-shadow(0 0 1px rgba(0,0,0,.8))}
-  .edge.rim{fill:none;stroke:#1a0d05;stroke-width:6.6;stroke-linecap:round;opacity:.9}
-  .edge.hot{stroke:#ffd54a;stroke-width:3.6;opacity:1;mix-blend-mode:normal;
+  /* referência sutil dos caminhos: vetor fino, sem contorno/sombra escura */
+  .edge{stroke:#FFFDE2;stroke-width:2;stroke-linecap:round;opacity:.8}
+  .edge.hot{stroke:#ffd54a;stroke-width:2;opacity:1;mix-blend-mode:normal;
     filter:drop-shadow(0 0 4px rgba(255,193,7,.85))}
-  /* casa da trilha: flat, discreta, como se estivesse gravada no mapa (não mais um botão 3D) */
-  .nd{fill:#cba86a;fill-opacity:.62;stroke:#6b4a1e;stroke-width:1.1;stroke-opacity:.55;
+  /* casa da trilha: pequena (não se confunde com o peão) mas bem visível, como se estivesse gravada no mapa */
+  .nd{fill:#e8c988;fill-opacity:.88;stroke:#6b4a1e;stroke-width:1.2;stroke-opacity:.8;
     transition:fill .15s var(--ease),fill-opacity .15s var(--ease),stroke-opacity .15s var(--ease)}
-  .nd-rim{display:none}
-  .nd-shine{display:none}
-  .ndpick .nd{fill:#ffd66b;fill-opacity:.9;stroke-opacity:.8;animation:ndBreathe 1.8s ease-in-out infinite}
-  @keyframes ndBreathe{0%,100%{fill-opacity:.9}50%{fill-opacity:.55}}
-  .edge.stub{opacity:1;stroke-width:3.2}
-  .edge.stub.rim{opacity:.9;stroke-width:5.8}
+  .ndpick .nd{fill:#ffd66b;fill-opacity:.95;stroke-opacity:.9;animation:ndBreathe 1.8s ease-in-out infinite}
+  @keyframes ndBreathe{0%,100%{fill-opacity:.95}50%{fill-opacity:.6}}
   .nd.nest{fill:none;stroke:none}
+  /* setinha sutil, nas casas junto ao ninho, apontando pro centro do tabuleiro — precisa de
+     algum contraste pra não sumir sobre a arte das montanhas, mas sem chamar mais atenção que a casa */
+  .nestHint{fill:#fff3cf;stroke:#6b4a1e;stroke-width:1;stroke-opacity:.7;opacity:.85;pointer-events:none}
   .villmed{filter:drop-shadow(0 3px 4px rgba(0,0,0,.55));pointer-events:none}
   .villowner{fill:none;stroke-width:6;
     filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));
@@ -372,17 +370,12 @@ window.addEventListener('load', function() {
               <stop offset="50%" stop-color="#c69a53"/>
               <stop offset="100%" stop-color="#5c3f1c"/>
             </radialGradient>
-            <linearGradient id="gradEdge" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#f0cf7a"/>
-              <stop offset="50%" stop-color="#fff3c8"/>
-              <stop offset="100%" stop-color="#f0cf7a"/>
-            </linearGradient>
             <radialGradient id="gradGround" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stop-color="#000" stop-opacity=".55"/>
               <stop offset="100%" stop-color="#000" stop-opacity="0"/>
             </radialGradient>
           </defs>
-          <g id="gNodes"></g><g id="gEdges"></g><g id="gVill"></g><g id="gPawns"></g>
+          <g id="gEdges"></g><g id="gNodes"></g><g id="gVill"></g><g id="gPawns"></g>
         </svg>
         <div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
         <div class="evtReveal" id="evtReveal">
@@ -507,15 +500,15 @@ if(!(document.documentElement.requestFullscreen||document.documentElement.webkit
 }
 
 /* ============================================================
-   2. GRAFO DO TABULEIRO  (24 trilha + 6 vilas + 1 ninho)
+   2. GRAFO DO TABULEIRO  (24 trilha + 6 vilas + 1 ninho — layout em losango)
    ============================================================ */
-const R_V=288,R_P=250,R_M=185,R_I=92;
-/* A arte é 16:10 com o Ninho no centro exato. O grafo do tabuleiro (mesma topologia
-   de sempre: 31 casas, vilas a 4 passos do ninho) é girado -30° para virar um hexágono
-   de "ponta horizontal" — assim as vilas caem no Leste/Oeste e nas diagonais, longe dos
-   quatro medalhões de dragão dos cantos — e é alongado em elipse para preencher o 16:10. */
+/* Layout desenhado à mão pelas referências assets/rotas.png e
+   "assets/rotas_com o vilarejo aplicado.png" (formato do losango/conexões) e recalibrado
+   para os castelos pintados em assets/board/tabuleiro-*.jpg (posição das 6 vilas).
+   O Ninho é uma casa real no centro exato (0,0), a 5 passos de cada vila; só as 6 casas
+   de trilha mais internas (INNER_IDS) têm uma aresta até ele, e ganham uma setinha sutil
+   apontando pro meio (ver drawBoard) pra indicar que dá pra continuar até lá. */
 const ART_W=1600,ART_H=1000;        // viewBox da arte: -800..800  /  -500..500
-const KX=2.15,KY=1.45;              // alongamento elíptico (x, y) sobre os raios acima
 const S=1.34;                       // escala dos desenhos (nós, fichas) p/ o novo tamanho de tela
 const VR=56*S;                      // raio da ficha redonda de vilarejo (proporção da referência: ~4.7x o diâmetro de uma casa)
 const DROP_H=VR*0.44, DROP_W=DROP_H*(78/101); // gota de umidade, proporcional ao medalhão
@@ -540,34 +533,57 @@ const ART_INVERNO='assets/board/tabuleiro-inverno.jpg';
 const SEASON_ART=[ART_PRIMAVERA,ART_VERAO,ART_OUTONO,ART_INVERNO];
 function artFor(s){return SEASON_ART[s]||SEASON_ART[0];}
 const N={};                                   // id -> node
-function pol(r,d){const a=d*Math.PI/180;
-  return{x:+(r*KX*Math.cos(a)).toFixed(2),y:+(-r*KY*Math.sin(a)).toFixed(2)};}
-function node(id,type,r,deg){const p=pol(r,deg);N[id]={id,type,deg,x:p.x,y:p.y,adj:[]};}
+function nodeXY(id,type,x,y,nest){N[id]={id,type,x,y,adj:[],nest:!!nest};}
 function link(a,b){if(!N[a].adj.includes(b)){N[a].adj.push(b);N[b].adj.push(a);}}
-/* direção radial unitária de uma casa (a elipse deforma o vetor, então normalizamos) */
+/* direção radial unitária de uma casa (usada p/ posicionar gotas de água, marca de dono etc.) */
 function radial(n){const L=Math.hypot(n.x,n.y)||1;return{ux:n.x/L,uy:n.y/L};}
 
-const VANG=[0,60,120,180,240,300];            // L, NE, NO, O, SO, SE
-const PANG=[30,90,150,210,270,330];           // meios de aresta do perímetro
-VANG.forEach((a,i)=>node('V'+i,'village',R_V,a));
-PANG.forEach((a,i)=>node('P'+i,'trail',R_P,a));
-for(let i=0;i<12;i++)node('M'+i,'trail',R_M,i*30);
-for(let i=0;i<6;i++)node('I'+i,'trail',R_I,i*60+30);
-node('NEST','nest',0,0);
+// vilas: N, NE, SE, S, SO, NO — centradas exatamente nos castelos pintados na arte do
+// tabuleiro (assets/board/tabuleiro-*.jpg), medidos pixel a pixel na imagem de primavera.
+nodeXY('V0','village',0,-351.3);    nodeXY('V1','village',405.5,-146.2);
+nodeXY('V2','village',405.5,146.2); nodeXY('V3','village',0,351.3);
+nodeXY('V4','village',-405.5,146.2); nodeXY('V5','village',-405.5,-146.2);
+// trilha (24)
+nodeXY('T1','trail',-254.6,-269.2); nodeXY('T2','trail',253.0,-268.9);
+nodeXY('T3','trail',-0.8,-197.8);   nodeXY('T4','trail',-159.3,-173.9);
+nodeXY('T5','trail',157.7,-173.4);  nodeXY('T6','trail',-0.7,-94.8);
+nodeXY('T7','trail',-253.9,-84.6);  nodeXY('T8','trail',252.7,-84.6);
+nodeXY('T9','trail',-133.7,-53.7); nodeXY('T10','trail',132.0,-53.5);
+nodeXY('T11','trail',-506.1,-4.1);  nodeXY('T12','trail',504.5,-3.8);
+nodeXY('T13','trail',320.2,-2.3);   nodeXY('T14','trail',-322.0,-2.2);
+nodeXY('T15','trail',132.2,49.2); nodeXY('T16','trail',-133.8,49.3);
+nodeXY('T17','trail',252.6,84.9);   nodeXY('T18','trail',-254.4,85.0);
+nodeXY('T19','trail',-0.6,89.8);
+nodeXY('T20','trail',158.0,172.0);  nodeXY('T21','trail',-159.7,172.3);
+nodeXY('T22','trail',-1.2,197.3);
+nodeXY('T23','trail',252.4,266.8);  nodeXY('T24','trail',-253.9,267.1);
+// ninho: casa real no centro exato (onde a arte mostra os ovos) — as 6 casas mais internas
+// (INNER_IDS) são as únicas com uma aresta até ele, e ganham uma setinha sutil apontando
+// pro meio pra deixar claro que dá pra continuar andando até o ninho.
+nodeXY('NEST','nest',0,0,true);
+const INNER_IDS=['T6','T9','T10','T15','T16','T19'];
 
-// anel periférico (vilas intercaladas com trilha)
-const RING=['V0','P0','V1','P1','V2','P2','V3','P3','V4','P4','V5','P5'];
-RING.forEach((id,i)=>link(id,RING[(i+1)%12]));
-// anel intermediário externo (12) e interno (6)
-for(let i=0;i<12;i++)link('M'+i,'M'+((i+1)%12));
-for(let i=0;i<6;i++)link('I'+i,'I'+((i+1)%6));
-// radiais das vilas para o anel intermediário (vila em 60i° -> M de mesmo ângulo)
-[[0,0],[1,2],[2,4],[3,6],[4,8],[5,10]].forEach(([v,m])=>link('V'+v,'M'+m));
-// extremidades verticais (norte / sul)
-link('P1','M3');link('P4','M9');
-// intermediário -> interno (chevrons) e interno -> ninho
-[[1,0],[3,1],[5,2],[7,3],[9,4],[11,5]].forEach(([m,i])=>link('M'+m,'I'+i));
-for(let i=0;i<6;i++)link('I'+i,'NEST');
+[['T1','T4'],['T1','V0'],['T1','V5'],
+ ['T2','T5'],['T2','V0'],['T2','V1'],
+ ['T3','T4'],['T3','T5'],
+ ['T4','T7'],['T5','T8'],
+ ['T6','T9'],['T6','T10'],
+ ['T7','T9'],['T7','T14'],
+ ['T8','T10'],['T8','T13'],
+ ['T11','T14'],['T11','V4'],['T11','V5'],
+ ['T12','T13'],['T12','V2'],['T12','V1'],
+ ['T13','T17'],['T14','T18'],
+ ['T15','T17'],['T15','T19'],
+ ['T16','T18'],['T16','T19'],
+ ['T17','T20'],['T18','T21'],
+ ['T20','T22'],['T20','T23'],
+ ['T21','T22'],['T21','T24'],
+ ['T23','V3'],['T23','V2'],
+ ['T24','V3'],['T24','V4']].forEach(([a,b])=>link(a,b));
+INNER_IDS.forEach(id=>link(id,'NEST'));
+
+const VILLAGE_IDS=['V0','V1','V2','V3','V4','V5'];
+const NEST_IDS=Object.keys(N).filter(id=>N[id].nest);
 
 /* ============================================================
    3. ESTADO
@@ -625,7 +641,7 @@ const counts=document.getElementById('counts'),plist=document.getElementById('pl
   counts.appendChild(b);});
 function drawSeats(){plist.innerHTML='';SEATS[nP].forEach((v,i)=>{
   const d=document.createElement('div');d.className='pl';
-  d.innerHTML='<div class="av" style="background:'+COLORS[i]+'">'+NAMES[i][0]+'</div><div class="t">'+NAMES[i]+'<br>Vila '+['L','NE','NO','O','SO','SE'][v]+'</div>';
+  d.innerHTML='<div class="av" style="background:'+COLORS[i]+'">'+NAMES[i][0]+'</div><div class="t">'+NAMES[i]+'<br>Vila '+['N','NE','SE','S','SO','NO'][v]+'</div>';
   plist.appendChild(d);});}
 drawSeats();
 document.getElementById('btnStart').onclick=start;
@@ -647,8 +663,8 @@ function start(){
     carried:[],cards:[],skip:false,blessed:false,cursed:false}));
   // vilarejos = quantidade de jogadores: as vilas não usadas viram casas comuns da trilha
   const active=new Set(SEATS[nP]);
-  VANG.forEach((_,i)=>{N['V'+i].type=active.has(i)?'village':'M';
-    G.vill['V'+i]=[];G.water['V'+i]=0;G.broken['V'+i]=false;});
+  VILLAGE_IDS.forEach((id,i)=>{N[id].type=active.has(i)?'village':'trail';
+    G.vill[id]=[];G.water[id]=0;G.broken[id]=false;});
   document.getElementById('setup').classList.add('hide');
   setBoardArt(G.season);drawBoard();revealEvent(true);renderAll();
   log('Partida iniciada com '+nP+' jogadores.');
@@ -873,18 +889,7 @@ function drawBoard(){
   }
   const seen=new Set();
   for(const id in N)N[id].adj.forEach(b=>{const k=[id,b].sort().join('|');if(seen.has(k))return;seen.add(k);
-    if(id==='NEST'||b==='NEST'){
-      // ninho já pintado na arte: em vez da linha inteira, só uma pontinha saindo da casa
-      // em direção ao centro — sutil o bastante para não crer que só dá pra andar em volta
-      const oid=id==='NEST'?b:id, o=N[oid];
-      const len=Math.hypot(o.x,o.y), ux=-o.x/len, uy=-o.y/len;
-      const sx=o.x+ux*15*S, sy=o.y+uy*15*S, ex=o.x+ux*34*S, ey=o.y+uy*34*S;
-      gE.appendChild(el('line',{x1:sx,y1:sy,x2:ex,y2:ey,class:'edge stub rim'}));
-      gE.appendChild(el('line',{x1:sx,y1:sy,x2:ex,y2:ey,class:'edge stub'}));
-      return;
-    }
-    // rim escuro por baixo (sulco entalhado) + trilha dourada por cima: dá profundidade de caminho gravado no mapa
-    gE.appendChild(el('line',{x1:N[id].x,y1:N[id].y,x2:N[b].x,y2:N[b].y,class:'edge rim'}));
+    // referência sutil do caminho: um traço fino só, sem contorno escuro por baixo
     gE.appendChild(el('line',{x1:N[id].x,y1:N[id].y,x2:N[b].x,y2:N[b].y,class:'edge',id:'edge_'+id+'_'+b}));});
   for(const id in N){const n=N[id];
     const g=el('g',{id:'node_'+id});
@@ -903,17 +908,23 @@ function drawBoard(){
       g.appendChild(el('polygon',{points:hexPts(0,0,52*S),class:'halo',id:'ha_NEST'}));
       // dragão em jogo: emblema bordado sobre o ninho
       const dg=el('g',{class:'dragonshape',id:'dragonShape'});
-      const img=el('image',{x:-150,y:-150,width:300,height:300,'clip-path':'url(#dragonClip)',preserveAspectRatio:'xMidYMid slice'});
-      img.setAttribute('href',DRAGON_IMG);
-      img.setAttributeNS('http://www.w3.org/1999/xlink','href',DRAGON_IMG);
-      dg.appendChild(img);
+      const dgImg=el('image',{x:-150,y:-150,width:300,height:300,'clip-path':'url(#dragonClip)',preserveAspectRatio:'xMidYMid slice'});
+      dgImg.setAttribute('href',DRAGON_IMG);
+      dgImg.setAttributeNS('http://www.w3.org/1999/xlink','href',DRAGON_IMG);
+      dg.appendChild(dgImg);
       dg.appendChild(el('circle',{cx:0,cy:0,r:150,fill:'none',stroke:'#5c1a12','stroke-width':6}));
       g.appendChild(dg);
     }else{
-      g.appendChild(el('circle',{cx:n.x,cy:n.y,r:14.5*S,class:'nd-rim'}));
-      g.appendChild(el('circle',{cx:n.x,cy:n.y,r:12*S,class:'nd',id:'nd_'+id}));
-      g.appendChild(el('circle',{cx:n.x-3.5*S,cy:n.y-3.5*S,r:3.6*S,class:'nd-shine'}));
-      g.appendChild(el('circle',{cx:n.x,cy:n.y,r:19*S,class:'halo',id:'ha_'+id}));
+      g.appendChild(el('circle',{cx:n.x,cy:n.y,r:7*S,class:'nd',id:'nd_'+id}));
+      g.appendChild(el('circle',{cx:n.x,cy:n.y,r:12*S,class:'halo',id:'ha_'+id}));
+      if(INNER_IDS.includes(id)){
+        // setinha sutil apontando pro centro: mostra que dá pra continuar até o Ninho
+        const L=Math.hypot(n.x,n.y)||1,ux=-n.x/L,uy=-n.y/L,px=-uy,py=ux;
+        const tipD=7*S+18,baseD=7*S+6,halfW=5*S;
+        const tip=[n.x+ux*tipD,n.y+uy*tipD],b1=[n.x+ux*baseD+px*halfW,n.y+uy*baseD+py*halfW],
+              b2=[n.x+ux*baseD-px*halfW,n.y+uy*baseD-py*halfW];
+        g.appendChild(el('polygon',{points:tip.join(',')+' '+b1.join(',')+' '+b2.join(','),class:'nestHint'}));
+      }
     }
     const h=el('circle',{cx:n.x,cy:n.y,r:(n.type==='village'?(VR+10):26*S),class:'hit',id:'hit_'+id});
     h.addEventListener('click',()=>onNode(id));
@@ -928,8 +939,8 @@ const revealFlipCache=new WeakMap();
 
 function renderVillages(){
   gV.innerHTML='';
-  VANG.forEach((deg,vi)=>{
-    const id='V'+vi,n=N[id];
+  VILLAGE_IDS.forEach(id=>{
+    const n=N[id];
     if(n.type!=='village')return; // vilarejo desativado nesta partida (poucos jogadores) = casa normal, sem overlay
     const owner=G.players.find(p=>p.home===id);
     const {ux,uy}=radial(n);                           // vetor radial unitário (elipse já compensada)
@@ -1346,13 +1357,13 @@ function arrive(id){
   }
 
   if(G.pinote){                       // fuga (pinote): não dispara novos encontros
-    if(id==='NEST')G.steps=0;
+    if(N[id].nest)G.steps=0;
     renderAll();
     if(G.steps>0)return highlight();
     return endPinote();
   }
 
-  if(id==='NEST'){G.steps=0;G.phase='idle';renderAll();return resolveNest();}
+  if(N[id].nest){G.steps=0;G.phase='idle';renderAll();return resolveNest();}
 
   if(id!==p.home&&N[id].type==='village'){
     const owner=G.players.find(x=>x.home===id);
@@ -1651,8 +1662,8 @@ function moveBack(p,n,done){
   let left=n,prev=null;
   const hop=()=>{
     if(left<=0){renderAll();return done&&done();}
-    let o=N[p.pos].adj.filter(x=>x!=='NEST'&&x!==prev);
-    if(!o.length)o=N[p.pos].adj.filter(x=>x!=='NEST');
+    let o=N[p.pos].adj.filter(x=>!N[x].nest&&x!==prev);
+    if(!o.length)o=N[p.pos].adj.filter(x=>!N[x].nest);
     if(!o.length)return done&&done();
     prev=p.pos;p.pos=o[Math.random()*o.length|0];left--;renderPawns();
     setTimeout(hop,230);
@@ -1673,6 +1684,12 @@ function bestNeighborTowards(target,opts){
   opts.forEach(o=>{const dd=dist[o]===undefined?999:dist[o];if(dd<bestD){bestD=dd;best=o;}});
   return best;
 }
+/* casa de trilha com nest:true mais próxima de "from" — usada como alvo de IA quando não há vila melhor */
+function nearestNest(from){
+  const dist=bfsDist(from);let best=NEST_IDS[0],bestD=Infinity;
+  NEST_IDS.forEach(id=>{const dd=dist[id]===undefined?999:dist[id];if(dd<bestD){bestD=dd;best=id;}});
+  return best;
+}
 function autoTargetFor(p){
   if(p.carried.length)return p.home;
   let bestVid=null,bestD=Infinity;
@@ -1680,7 +1697,7 @@ function autoTargetFor(p){
     if(!G.vill[vid]||!G.vill[vid].length)continue;
     const owner=G.players.find(x=>x.home===vid);if(owner&&owner.pos===vid)continue;
     const d=bfsDist(vid)[p.pos];if(d!==undefined&&d<bestD){bestD=d;bestVid=vid;}}
-  return bestVid||'NEST';
+  return bestVid||nearestNest(p.pos);
 }
 function autoNextNode(p){
   let opts=N[p.pos].adj.slice();
@@ -1738,7 +1755,7 @@ async function autoMoveLoop(p){
       await sleep(600);
       if(eggsOf(p)>=8){gameOver('eggs',p);return;}
     }
-    if(next==='NEST'){G.steps=0;await autoResolveNest(p);return;}
+    if(N[next].nest){G.steps=0;await autoResolveNest(p);return;}
     if(next!==p.home&&N[next].type==='village'&&canCarryMore(p)&&!p.cursed){
       const owner=G.players.find(x=>x.home===next);
       if(!(owner&&owner.pos===next)&&G.vill[next]&&G.vill[next].length){await autoInvade(p,next,owner);continue;}
@@ -1845,10 +1862,10 @@ async function autoBump(p,alvo){
     autoNote('Pinote!',alvo.name+' escapou e anda 3 casas.');
     let left=3,prevx=null,cur=alvo.pos;
     for(let k=0;k<left;k++){
-      let opts=N[cur].adj.filter(x=>x!=='NEST'&&x!==prevx);
-      if(!opts.length)opts=N[cur].adj.filter(x=>x!=='NEST');
+      let opts=N[cur].adj.filter(x=>!N[x].nest&&x!==prevx);
+      if(!opts.length)opts=N[cur].adj.filter(x=>!N[x].nest);
       if(!opts.length)break;
-      const nx=bestNeighborTowards(alvo.carried.length?alvo.home:'NEST',opts);
+      const nx=bestNeighborTowards(alvo.carried.length?alvo.home:nearestNest(cur),opts);
       prevx=cur;cur=nx;
     }
     alvo.pos=cur;renderPawns();
@@ -1988,7 +2005,7 @@ function addWater(n){
 }
 function dragonPenalty(){
   G.players.forEach(p=>{
-    if(p.pos!=='NEST')return;
+    if(!N[p.pos].nest)return;
     if(p.carried.length){p.carried.forEach(t=>G.pool.push(t.type));p.carried=[];shuffle(G.pool);
       log(p.name+' largou a ficha no ninho e recuou 1 casa.');moveBack(p,1);}
     else{log(p.name+' estava no ninho sem ficha e recuou 3 casas.');moveBack(p,3);}
