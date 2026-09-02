@@ -3,6 +3,9 @@
 Protótipo jogável do Oscaribas em HTML/CSS/JS puro (sem build step), pensado para
 tablet. Hospedado na Vercel como site estático.
 
+As regras completas ficam em [`RULES.md`](RULES.md) — é o manual oficial (setembro/2026),
+usado como referência ao mexer em qualquer lógica de jogo.
+
 ## Estrutura
 
 ```
@@ -13,28 +16,28 @@ assets/
     tabuleiro-verao.jpg
     tabuleiro-outono.jpg
     tabuleiro-inverno.jpg
-  img/                    Ícones e fichas ilustradas
+  img/                    Ícones e arte solta do tabuleiro
     dragon.png            Emblema do dragão no ninho
     shock.png              Ilustração de "raio" (evento Tempestade)
     village.png             Medalhão redondo de vilarejo
     drop.png                 Gota de marcador de umidade
-    ficha-ovo.png             Frente da ficha "Ovo de Dragão"
-    ficha-esterco.png          Frente da ficha "Esterco de Dragão"
-    ficha-armadilha.png         Frente da ficha "Armadilha"
-    ficha-verso.png              Verso genérico de ficha
-    ficha-sol.png                 Arte da carta de evento "Sol"
-    ficha-chuva.png                Arte da carta de evento "Chuva"
-    ficha-tempestade.png            Arte da carta de evento "Tempestade"
-    tre-escama.png                   Carta de tesouro "Escama de Dragão"
-    tre-sopro.png                     Carta de tesouro "Sopro de Dragão"
-    tre-olho.png                       Carta de tesouro "Olho de Dragão"
-    treasure-verso.png                  Verso genérico de carta de tesouro
-  evt/                                   Cartas de evento ilustradas (agosto/2026)
-    card-<evento>.webp                    Arte quadrada exibida no baralho (painel direito)
-    modal-<evento>.webp                    Placa grande da revelação de evento
-                                            (sol, chuva, tempestade, nevasca, dragao, maldicao, ventos)
+  ficha/                  Cartas das fichas do Ninho (manual novo, setembro/2026)
+    ficha-ovo.webp          Frente "Ovo de Dragão"
+    ficha-esterco.webp       Frente "Cocô de Dragão"
+    ficha-armadilha.webp      Frente "Armadilha"
+    ficha-verso.webp           Verso genérico de ficha
+  magia/                  Cartas de Magia (substituem o antigo baralho de Tesouro)
+    magia-visao.webp         Frente "Visão de Dragão"
+    magia-alagar.webp         Frente "Alagar"
+    magia-amedrontar.webp      Frente "Amedrontar"
+    magia-verso.webp            Verso genérico de carta de Magia
+  evt/                    Cartas de evento
+    card-<evento>.webp     Ícone quadrado da carta ativa (painel direito/baralho)
+    evt-<evento>.webp        Carta grande usada na revelação de evento (manual novo)
+    evt-verso.webp             Verso genérico de carta de evento
+                              (sol, chuva, tempestade, nevasca, dragao, maldicao, ventos)
   audio/
-    dice-sound.mp3                       Som do dado
+    dice-sound.mp3         Som do dado
 ```
 
 Nenhum outro arquivo é necessário para rodar o jogo — é só abrir `index.html`
@@ -62,23 +65,24 @@ relatado antes. Agora `index.html` aponta direto para `assets/audio/dice-sound.m
    ```
 3. Ligue essa const onde ela precisa aparecer:
    - Arte de tabuleiro por estação → array `SEASON_ART` (~linha 536).
-   - Arte de ficha de carta de evento → objeto `EVT_IMG` (perto da definição de `EVT`).
+   - Arte da ficha de carta de evento → objetos `EVT_IMG`/`EVT_CARD` (perto da definição de `EVT`).
    - Fichas/ícones do tabuleiro (ovo, esterco, armadilha, dragão, vilarejo, gota) →
      são usados diretamente como `href` de `<image>` dentro de `drawBoard()`.
 
 ## Onde mexer em cada coisa
 
-| O que mudar                                   | Onde                                          |
-|------------------------------------------------|------------------------------------------------|
-| Regras/probabilidades do baralho de evento     | `SEASONS[i].deck` (quantidade de cada carta)   |
-| Texto/cor de um evento                          | objeto `EVT`                                    |
-| Texto/cor de uma carta de tesouro               | objeto `TRE`                                     |
-| Arte de fundo do tabuleiro por estação          | `SEASON_ART` / consts `ART_*`                    |
-| Arte da ficha no baralho de evento + no modal   | `EVT_IMG`                                         |
-| Lógica de turno, movimento, roubo, dragão       | funções a partir de `function startTurn()`        |
-| Layout/CSS                                       | bloco `<style>` no topo do `index.html`             |
+| O que mudar                                       | Onde                                            |
+|----------------------------------------------------|--------------------------------------------------|
+| Regras/probabilidades do baralho de evento         | `SEASONS[i].deck` (quantidade de cada carta)     |
+| Texto/cor de um evento                              | objeto `EVT`                                      |
+| Texto/cor de uma carta de Magia                     | objeto `MAGIA`                                     |
+| Quantidade de fichas/Magia por nº de jogadores      | `POOL_BY_PLAYERS` / `MAGIA_PER_TYPE`                |
+| Arte de fundo do tabuleiro por estação              | `SEASON_ART` / consts `ART_*`                        |
+| Arte da ficha no baralho de evento + na revelação   | `EVT_IMG` / `EVT_CARD`                                |
+| Lógica de turno, movimento, roubo, dragão           | funções a partir de `function startTurn()`            |
+| Layout/CSS                                           | bloco `<style>` no topo do `index.html`                 |
 
-## Regras implementadas (atualização agosto/2026)
+## Regras implementadas (agosto/2026, com ajustes de setembro/2026 ao novo manual)
 
 ### Fluxo de turno
 
@@ -113,22 +117,31 @@ de evento que não é de dragão, bênção e maldição se desfazem (e fichas e
 voltam ao monte). A penalidade antiga de quem já estava no ninho quando o dragão
 chega — largar a ficha e recuar — continua valendo (`dragonPenalty()`).
 
-### Ventos da Sorte (carta nova)
+### Ventos da Sorte
 
 Enquanto a carta está em jogo, **ao fim da jogada** cada jogador escolhe entre
 **avançar +2 casas** (movimento normal, com escolha de rota e encontros valendo) ou
-**comprar 1 carta de Tesouro**.
+**ganhar 1 carta de Magia**.
 
-### Composição dos baralhos
+### Magia (substitui o antigo Tesouro)
 
-12 cartas por estação:
+Três cartas, sempre usáveis a qualquer momento por qualquer jogador que as tenha em
+mãos (objeto `MAGIA`, painel "Cartas de Magia"): **Visão de Dragão** (espia 2 fichas
+de um vilarejo em segredo), **Alagar** (+2 água num vilarejo à escolha) e
+**Amedrontar** (arma uma defesa que impede o próximo roubo sofrido — não vale contra
+Armadilha). A quantidade de cada uma no baralho escala com o número de jogadores
+(`MAGIA_PER_TYPE`), assim como o Monte do Dragão (`POOL_BY_PLAYERS`) — ver `RULES.md`.
+
+### Composição dos baralhos de evento
+
+12 cartas por estação (`SEASONS[i].deck`, manual setembro/2026):
 
 | Estação    | Sol | Chuva | Tempestade | Nevasca | Dragão | Maldição | Ventos |
 |------------|-----|-------|------------|---------|--------|----------|--------|
-| Primavera  | 4   | 5     | 1          | 0       | 0      | 0        | 2      |
-| Verão      | 4   | 2     | 3          | 0       | 2      | 0        | 1      |
-| Outono     | 3   | 2     | 2          | 2       | 1      | 1        | 1      |
-| Inverno    | 0   | 2     | 3          | 3       | 2      | 2        | 0      |
+| Primavera  | 4   | 3     | 1          | 0       | 0      | 1        | 3      |
+| Verão      | 4   | 2     | 1          | 0       | 3      | 0        | 2      |
+| Outono     | 2   | 2     | 3          | 0       | 2      | 2        | 1      |
+| Inverno    | 1   | 1     | 2          | 4       | 1      | 2        | 1      |
 
 ### Simular rodada
 
@@ -139,6 +152,6 @@ ordem cronológica das regras. Não mexe na posição dos jogadores.
 ## Rodando localmente
 
 ```bash
-python3 -m http.server 8000
-# abra http://localhost:8000/index.html
+node serve.js
+# abra http://localhost:8791/index.html
 ```

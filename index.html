@@ -92,7 +92,7 @@
   .card .icwrap{flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
   .card .ttl{font-size:13.5px;font-weight:600}
   .card .sub{font-size:11.5px;color:var(--text2);line-height:1.35;margin-top:2px}
-  /* cartas de tesouro de TODOS os jogadores, usáveis a qualquer momento */
+  /* cartas de Magia de TODOS os jogadores, usáveis a qualquer momento */
   .treGroup+.treGroup{margin-top:14px}
   .treGroup .treHead{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3);
     text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
@@ -150,16 +150,23 @@
   .artbox #board{transition:opacity .28s var(--ease)}
   .artbox.reveal #board{opacity:0;pointer-events:none}
   .evtReveal{position:absolute;inset:0;z-index:30;display:grid;place-items:center;
-    opacity:0;pointer-events:none;cursor:pointer;background:rgba(20,14,8,.34);
+    opacity:0;pointer-events:none;cursor:pointer;background:rgba(20,14,8,.4);
     transition:opacity .22s var(--ease)}
   .evtReveal.on{opacity:1;pointer-events:auto}
-  .evtReveal img{width:78%;max-width:920px;max-height:88%;object-fit:contain;display:block;
-    filter:drop-shadow(0 18px 44px rgba(0,0,0,.55));
+  /* a carta de evento (arte pronta, moldura e título já embutidos) num cartão branco,
+     igual às cartas do Ninho/Magia — troca a antiga placa larga por algo consistente */
+  .evtCard{position:relative;background:#fff;border-radius:20px;padding:22px 24px 22px;
+    max-width:340px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5);
     transform:translateY(-130%) scale(.94);
     transition:transform .42s cubic-bezier(.18,.85,.3,1.05)}
-  .evtReveal.on img{transform:translateY(0) scale(1)}
-  .evtReveal.leaving img{transform:translateY(-130%) scale(.94);
+  .evtReveal.on .evtCard{transform:translateY(0) scale(1)}
+  .evtReveal.leaving .evtCard{transform:translateY(-130%) scale(.94);
     transition:transform .3s cubic-bezier(.6,0,.75,.2)}
+  .evtCard .eyebrow{font-size:11px;letter-spacing:2.4px;text-transform:uppercase;color:var(--text3)}
+  .evtCard img{width:100%;max-width:280px;border-radius:12px;display:block;margin:10px auto 14px;
+    box-shadow:0 10px 22px rgba(0,0,0,.35)}
+  .evtCard h2{font-size:19px;font-weight:600;color:var(--text)}
+  .evtCard p{font-size:12.5px;color:var(--text2);margin-top:6px;line-height:1.5}
   .evtHint{position:absolute;bottom:22px;left:0;right:0;text-align:center;color:#f4e7cf;
     font-size:13px;letter-spacing:.4px;opacity:.75;text-shadow:0 2px 6px rgba(0,0,0,.7)}
 
@@ -280,6 +287,21 @@
     box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.45)}
   .plateBox .btn:hover{filter:brightness(1.07);box-shadow:0 10px 22px rgba(0,0,0,.5),0 0 22px rgba(255,190,80,.4)}
 
+  /* ---------- carta de verdade num modal claro (eventos, fichas do Ninho, Magia) ----------
+     A arte nova já vem pronta (moldura, título e tudo), então aqui é só uma placa branca
+     simples pra hospedar a(s) carta(s) — sem o pergaminho escuro do .plateBox. */
+  .modal.cardWhite{width:auto;background:transparent;box-shadow:none;padding:0}
+  .cardBox{position:relative;width:720px;padding:30px 34px 34px;border-radius:22px;text-align:center;
+    color:var(--text);background:#fff;box-shadow:0 22px 54px rgba(0,0,0,.35);
+    animation:plateIn .42s cubic-bezier(.18,.85,.3,1.05)}
+  .cardBox .eyebrow{font-size:11.5px;letter-spacing:2.6px;text-transform:uppercase;color:var(--text3)}
+  .cardBox h2{font-size:26px;font-weight:500;color:var(--text);margin-top:6px}
+  .cardBox .lead{font-size:13.5px;color:var(--text2);margin-top:8px;line-height:1.5;max-width:520px;
+    margin-left:auto;margin-right:auto}
+  .cardBox .acts{justify-content:center;margin-top:20px}
+  .cardBox .revealTxt b{color:var(--text)}
+  .cardBox .revealTxt span{color:var(--text2)}
+
   .cardRow{display:flex;gap:34px;justify-content:center;align-items:flex-start;margin-top:22px;
     perspective:1400px}
   .cardRow.tight{gap:30px}
@@ -292,8 +314,8 @@
     box-shadow:0 12px 26px rgba(0,0,0,.55);transition:box-shadow .26s var(--ease)}
   .bigCard .art svg{display:block}
   .bigCard .cap{display:flex;flex-direction:column;gap:3px;line-height:1.2}
-  .bigCard .cap b{font-size:15px;font-weight:600;color:#f6e6c6;letter-spacing:.3px}
-  .bigCard .cap i{font-size:11.5px;font-style:normal;color:#a2906f}
+  .bigCard .cap b{font-size:15px;font-weight:600;color:var(--text);letter-spacing:.3px}
+  .bigCard .cap i{font-size:11.5px;font-style:normal;color:var(--text3)}
   /* brilho que varre a carta no hover */
   .bigCard .sheen{position:absolute;inset:0;pointer-events:none;opacity:0;
     background:linear-gradient(105deg,transparent 36%,rgba(255,246,222,.5) 50%,transparent 64%)}
@@ -431,9 +453,9 @@
     transition:stroke .2s var(--ease)}
   .waterdrop{filter:drop-shadow(0 1px 2px rgba(0,0,0,.45));pointer-events:none}
   .fanCard{filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))}
-  .fanHover{transform-box:fill-box;transform-origin:center;transition:transform .16s var(--ease);
-    pointer-events:auto;cursor:pointer}
-  .fanHover:hover{transform:scale(3)}
+  /* leque de fichas do vilarejo: tamanho médio fixo, sem zoom no hover — o zoom fazia a área
+     clicável "fugir" do dedo/cursor e dificultava roubar. Clicar abre o modal em tamanho grande. */
+  .fanHover{transform-box:fill-box;transform-origin:center;pointer-events:auto;cursor:pointer}
   .hit{fill:transparent;cursor:default}
   .hit.pick{cursor:pointer}
   .dim{opacity:.3;transition:opacity .18s var(--ease)}
@@ -507,7 +529,7 @@
       <div><h1>Oscaribas</h1><span>Protótipo · Tablet</span></div>
     </div>
     <div class="meta">
-      <div class="chip">Rodada <b id="mRound">1/20</b></div>
+      <div class="chip">Rodada <b id="mRound">1/24</b></div>
       <div class="chip">Estação <b id="mSeason">Primavera</b></div>
       <div class="chip" id="mDragon" style="display:none">🐉 <b>Dragão no ninho</b></div>
     </div>
@@ -548,7 +570,12 @@
         </svg>
         <div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
         <div class="evtReveal" id="evtReveal">
-          <img id="evtRevealArt" src="" alt="">
+          <div class="evtCard">
+            <div class="eyebrow" id="evtRevealSeason">Estação</div>
+            <img id="evtRevealArt" src="" alt="">
+            <h2 id="evtRevealName"></h2>
+            <p id="evtRevealDesc"></p>
+          </div>
           <div class="evtHint">Toque em qualquer lugar para continuar</div>
         </div>
       </div>
@@ -584,7 +611,7 @@
         <div class="tokrow" id="carried"><span class="empty">Nenhuma ficha em mãos</span></div>
       </div>
       <div class="sect" style="flex:1;overflow-y:auto">
-        <div class="lbl">Cartas de tesouro · qualquer jogador, a qualquer momento</div>
+        <div class="lbl">Cartas de Magia · qualquer jogador, a qualquer momento</div>
         <div id="treasures"><span class="empty">Nenhuma carta</span></div>
       </div>
     </div>
@@ -607,7 +634,7 @@
     <img class="bgArt" id="setupBg" alt="">
     <div class="setup-card">
       <h2>Oscaribas</h2>
-      <p class="sub">Grafo de 31 casas · 24 de trilha, 6 vilarejos e o Ninho do Dragão. Vence quem chegar a 8 Ovos de Dragão primeiro, ou tiver mais ovos ao fim das 20 rodadas (5 por estação).</p>
+      <p class="sub">Grafo de 31 casas · 24 de trilha, 6 vilarejos e o Ninho do Dragão. Vence quem tiver mais Ovos de Dragão guardados ao fim das 24 rodadas (6 por estação).</p>
       <div class="counts" id="counts"></div>
       <div class="plist" id="plist"></div>
       <div style="margin-top:32px;display:flex;justify-content:flex-end">
@@ -886,14 +913,16 @@ const VR=56*S;                      // raio da ficha redonda de vilarejo (propor
 const DROP_H=VR*0.44, DROP_W=DROP_H*(78/101); // gota de umidade, proporcional ao medalhão
 const DRAGON_IMG='assets/img/dragon.png';
 const SHOCK_IMG='assets/img/shock.png';
-const FICHA_ARMADILHA_IMG='assets/img/ficha-armadilha.png';
-const FICHA_OVO_IMG='assets/img/ficha-ovo.png';
-const FICHA_ESTERCO_IMG='assets/img/ficha-esterco.png';
-const TREASURE_VERSO_IMG='assets/img/treasure-verso.png';
-const TRE_OLHO_IMG='assets/img/tre-olho.png';
-const TRE_SOPRO_IMG='assets/img/tre-sopro.png';
-const TRE_ESCAMA_IMG='assets/img/tre-escama.png';
-const FICHA_VERSO_IMG='assets/img/ficha-verso.png';
+const FICHA_ARMADILHA_IMG='assets/ficha/ficha-armadilha.webp';
+const FICHA_OVO_IMG='assets/ficha/ficha-ovo.webp';
+const FICHA_ESTERCO_IMG='assets/ficha/ficha-esterco.webp';
+const FICHA_VERSO_IMG='assets/ficha/ficha-verso.webp';
+const MAGIA_VERSO_IMG='assets/magia/magia-verso.webp';
+const MAGIA_VISAO_IMG='assets/magia/magia-visao.webp';
+const MAGIA_ALAGAR_IMG='assets/magia/magia-alagar.webp';
+const MAGIA_AMEDRONTAR_IMG='assets/magia/magia-amedrontar.webp';
+/* proporção real das cartas novas (arte+moldura prontas, 405x624) */
+const CARD_RATIO=624/405;
 /* Arte do tabuleiro por estação. A arte é 16:10 e o Ninho fica exatamente no centro. */
 const ART_PRIMAVERA='assets/board/tabuleiro-primavera.jpg';
 /* arte do vilarejo (ficha redonda) e do marcador de umidade (gota) */
@@ -963,44 +992,50 @@ const NEST_IDS=Object.keys(N).filter(id=>N[id].nest);
 const COLORS=['#1a73e8','#ea4335','#fbbc04','#34a853','#a142f4','#f57c00'];
 const NAMES=['Azul','Vermelho','Amarelo','Verde','Violeta','Laranja'];
 const SEASONS=[
- {n:'Primavera',c:'#34a853',deck:{sol:4,chuva:5,tempestade:1,nevasca:0,dragao:0,maldicao:0,ventos:2}},
- {n:'Verão',    c:'#fbbc04',deck:{sol:4,chuva:2,tempestade:3,nevasca:0,dragao:2,maldicao:0,ventos:1}},
- {n:'Outono',   c:'#f57c00',deck:{sol:3,chuva:2,tempestade:2,nevasca:2,dragao:1,maldicao:1,ventos:1}},
- {n:'Inverno',  c:'#4285f4',deck:{sol:0,chuva:2,tempestade:3,nevasca:3,dragao:2,maldicao:2,ventos:0}}];
+ {n:'Primavera',c:'#34a853',deck:{sol:4,chuva:3,tempestade:1,nevasca:0,dragao:0,maldicao:1,ventos:3}},
+ {n:'Verão',    c:'#fbbc04',deck:{sol:4,chuva:2,tempestade:1,nevasca:0,dragao:3,maldicao:0,ventos:2}},
+ {n:'Outono',   c:'#f57c00',deck:{sol:2,chuva:2,tempestade:3,nevasca:0,dragao:2,maldicao:2,ventos:1}},
+ {n:'Inverno',  c:'#4285f4',deck:{sol:1,chuva:1,tempestade:2,nevasca:4,dragao:1,maldicao:2,ventos:1}}];
 const EVT={
  dragao:{n:'Dragão',c:'#ea4335',d:'O dragão voltou ao ninho. Quem pisar lá rola 1d6: 1–2 amaldiçoa · 3–4 ignora · 5–6 abençoa.'},
  maldicao:{n:'Maldição do Dragão',c:'#6a3fa0',d:'O dragão está furioso. Quem pisar no ninho rola 1d6: 1–3 amaldiçoa · 4–6 ignora. Não há bênção.'},
- ventos:{n:'Ventos da Sorte',c:'#34a853',d:'Ao fim da jogada, o jogador avança +2 casas ou compra 1 carta de Tesouro.'},
+ ventos:{n:'Ventos da Sorte',c:'#34a853',d:'Ao fim da jogada, o jogador avança +2 casas ou ganha 1 carta de Magia.'},
  chuva:{n:'Chuva',c:'#4285f4',d:'+1 marcador de água em cada vilarejo. Com 3, o teto desaba e as fichas ficam reveladas.'},
  tempestade:{n:'Tempestade',c:'#1a73e8',d:'+2 marcadores de água. Tirar 1 ou 6 no dado cancela o movimento do turno.'},
  sol:{n:'Sol',c:'#fbbc04',d:'Remove toda a água, conserta os telhados e vira as fichas para baixo de novo.'},
- nevasca:{n:'Nevasca',c:'#80868b',d:'Movimento comprometido: −2 no resultado do dado ao andar.'}};
+ nevasca:{n:'Nevasca',c:'#80868b',d:'−2 no resultado do dado ao andar (mínimo 0). Também soma +2 marcadores de água em cada vilarejo.'}};
 /* tabela do dado no ninho enquanto o dragão está lá — muda conforme a carta em jogo */
 const NEST_TABLE={
  dragao:{curse:[1,2],ignore:[3,4],bless:[5,6]},
  maldicao:{curse:[1,2,3],ignore:[4,5,6],bless:[]}};
 const TOK={ovo:{n:'Ovo de Dragão',c:'#34a853'},esterco:{n:'Esterco',c:'#8d6e63'},armadilha:{n:'Armadilha',c:'#ea4335'}};
-const TRE={
- escama:{n:'Escama de Dragão',c:'#1a73e8',d:'Arma um escudo que anula sozinho o próximo roubo ou armadilha sofrido.'},
- sopro:{n:'Sopro de Dragão',c:'#ea4335',d:'Espia agora tudo o que está guardado em um vilarejo à sua escolha.'},
- olho:{n:'Olho de Dragão',c:'#a142f4',d:'Mira uma ficha alheia e a marca como revelada para sempre.'}};
-/* EVT_IMG = arte quadrada do card (painel direito) · EVT_MODAL = placa grande da revelação */
+const MAGIA={
+ amedrontar:{n:'Amedrontar',c:'#1a73e8',d:'Arma uma defesa que impede sozinha o próximo roubo sofrido (não funciona contra Armadilha).'},
+ visao:{n:'Visão de Dragão',c:'#ea4335',d:'Escolha um jogador e veja 2 fichas guardadas no Vilarejo dele — só você vê.'},
+ alagar:{n:'Alagar',c:'#a142f4',d:'Escolha um vilarejo e adicione 2 marcadores de água a ele.'}};
+/* EVT_IMG = arte quadrada do card (painel direito) · EVT_CARD = carta grande da revelação */
 const EVT_IMG={sol:'assets/evt/card-sol.webp',chuva:'assets/evt/card-chuva.webp',
   tempestade:'assets/evt/card-tempestade.webp',nevasca:'assets/evt/card-nevasca.webp',
   dragao:'assets/evt/card-dragao.webp',maldicao:'assets/evt/card-maldicao.webp',
   ventos:'assets/evt/card-ventos.webp'};
-const EVT_MODAL={sol:'assets/evt/modal-sol.webp',chuva:'assets/evt/modal-chuva.webp',
-  tempestade:'assets/evt/modal-tempestade.webp',nevasca:'assets/evt/modal-nevasca.webp',
-  dragao:'assets/evt/modal-dragao.webp',maldicao:'assets/evt/modal-maldicao.webp',
-  ventos:'assets/evt/modal-ventos.webp'};
+const EVT_CARD={sol:'assets/evt/evt-sol.webp',chuva:'assets/evt/evt-chuva.webp',
+  tempestade:'assets/evt/evt-tempestade.webp',nevasca:'assets/evt/evt-nevasca.webp',
+  dragao:'assets/evt/evt-dragao.webp',maldicao:'assets/evt/evt-maldicao.webp',
+  ventos:'assets/evt/evt-ventos.webp'};
 
 const G={players:[],turn:0,mover:0,turnsDone:0,round:1,season:0,
-  event:null,dragon:false,pool:[],treasure:[],deck:[],
-  vill:{},water:{},broken:{},steps:0,prev:null,visited:[],phase:'setup',pinote:false,olho:false,ventosUsed:false};
+  event:null,dragon:false,pool:[],magia:[],deck:[],
+  vill:{},water:{},broken:{},steps:0,prev:null,visited:[],phase:'setup',pinote:false,ventosUsed:false};
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
-function buildPool(){G.pool=shuffle([...Array(24).fill('ovo'),...Array(24).fill('esterco'),...Array(12).fill('armadilha')]);}
-function buildTreasure(){G.treasure=shuffle([...Array(10).fill('escama'),...Array(10).fill('sopro'),...Array(10).fill('olho')]);}
+/* distribuição de fichas do Monte do Dragão e de Magia por número de jogadores (manual, seção 2) */
+const POOL_BY_PLAYERS={3:{ovo:12,esterco:12,armadilha:6},4:{ovo:16,esterco:16,armadilha:8},
+  5:{ovo:20,esterco:20,armadilha:10},6:{ovo:24,esterco:24,armadilha:12}};
+const MAGIA_PER_TYPE={3:5,4:6,5:8,6:10};
+function buildPool(){const t=POOL_BY_PLAYERS[nP]||POOL_BY_PLAYERS[6];
+  G.pool=shuffle([...Array(t.ovo).fill('ovo'),...Array(t.esterco).fill('esterco'),...Array(t.armadilha).fill('armadilha')]);}
+function buildMagia(){const n=MAGIA_PER_TYPE[nP]||MAGIA_PER_TYPE[6];
+  G.magia=shuffle([...Array(n).fill('amedrontar'),...Array(n).fill('visao'),...Array(n).fill('alagar')]);}
 function buildDeck(s){const d=[];for(const k in SEASONS[s].deck)for(let i=0;i<SEASONS[s].deck[k];i++)d.push(k);G.deck=shuffle(d);}
 
 /* ============================================================
@@ -1050,15 +1085,15 @@ document.getElementById('autoRoundBtn').onclick=function(){
   if(G.phase==='setup')return;
   if(revealBusy)return;
   closeModal();clearDim();
-  G.turnsDone=0;G.ventosUsed=false;G.pinote=false;G.olho=false;
+  G.turnsDone=0;G.ventosUsed=false;G.pinote=false;
   log('Rodada '+G.round+' simulada.');
   endRound();
 };
 
 function start(){
-  buildPool();buildTreasure();buildDeck(0);
+  buildPool();buildMagia();buildDeck(0);
   G.players=SEATS[nP].map((v,i)=>({i,name:NAMES[i],color:COLORS[i],home:'V'+v,pos:'V'+v,
-    carried:[],cards:[],skip:false,blessed:false,cursed:false,escamaShield:false}));
+    carried:[],cards:[],skip:false,blessed:false,cursed:false,medoShield:false}));
   // vilarejos = quantidade de jogadores: as vilas não usadas viram casas comuns da trilha
   const active=new Set(SEATS[nP]);
   VILLAGE_IDS.forEach((id,i)=>{N[id].type=active.has(i)?'village':'trail';
@@ -1154,7 +1189,7 @@ function setBoardArt(s){
 }
 function flipReveal(){const fc=$('evtFlip');fc.classList.remove('flipped');void fc.offsetWidth;setTimeout(()=>fc.classList.add('flipped'),260);}
 
-/* ---- ícones das cartas de tesouro: bloco colorido sólido + ícone branco ---- */
+/* ---- ícones das cartas de magia (código legado, hoje sem uso — a arte real já vem pronta) ---- */
 function treasureIconStr(k,cx,cy,r){
   if(k==='escama')return '<path d="M'+cx+' '+(cy-r)+' L'+(cx+r*0.82).toFixed(1)+' '+(cy-r*0.5).toFixed(1)+' L'+(cx+r*0.82).toFixed(1)+' '+(cy+r*0.15).toFixed(1)+
     ' C'+(cx+r*0.82).toFixed(1)+' '+(cy+r*0.7).toFixed(1)+' '+cx+' '+(cy+r).toFixed(1)+' '+cx+' '+(cy+r).toFixed(1)+
@@ -1188,7 +1223,7 @@ function fichaCardFront(type,size){
   const imgs={ovo:FICHA_OVO_IMG,esterco:FICHA_ESTERCO_IMG,armadilha:FICHA_ARMADILHA_IMG};
   const uid=Math.random().toString(36).slice(2,7);
   const clip='fcclip_'+type+'_'+uid;
-  const w=size,h=Math.round(size*1.446); // proporção real da arte da carta (240x347)
+  const w=size,h=Math.round(size*CARD_RATIO); // proporção real da arte da carta (240x347)
   const glow=type==='ovo';
   const glowId='eggGlow_'+uid;
   // véu de luz + 3 brilhos, posicionados sobre a arte do ovo (que ocupa o miolo da carta)
@@ -1213,7 +1248,7 @@ function fichaCardFront(type,size){
 function fichaCardBack(size){
   size=size||100;
   const clip='fbclip_'+Math.random().toString(36).slice(2,9);
-  const w=size,h=Math.round(size*1.446); // proporção real da carta (201x290)
+  const w=size,h=Math.round(size*CARD_RATIO); // proporção real da carta (201x290)
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
     <defs><clipPath id="${clip}"><rect x="0.5" y="0.5" width="${w-1}" height="${h-1}" rx="${Math.round(size*0.06)}"/></clipPath></defs>
     <image x="0" y="0" width="${w}" height="${h}" href="${FICHA_VERSO_IMG}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/>
@@ -1223,32 +1258,32 @@ function fichaCardBack(size){
 function treasureCardBack(size){
   size=size||100;
   const clip='tbclip_'+Math.random().toString(36).slice(2,9);
-  const w=size,h=Math.round(size*1.446);
+  const w=size,h=Math.round(size*CARD_RATIO);
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
     <defs><clipPath id="${clip}"><rect x="0.5" y="0.5" width="${w-1}" height="${h-1}" rx="${Math.round(size*0.06)}"/></clipPath></defs>
-    <image x="0" y="0" width="${w}" height="${h}" href="${TREASURE_VERSO_IMG}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/>
+    <image x="0" y="0" width="${w}" height="${h}" href="${MAGIA_VERSO_IMG}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/>
     ${cardFrameSVG(w,h,size)}
   </svg>`;
 }
-const TRE_IMGS={olho:TRE_OLHO_IMG,sopro:TRE_SOPRO_IMG,escama:TRE_ESCAMA_IMG};
+const MAGIA_IMGS={visao:MAGIA_VISAO_IMG,alagar:MAGIA_ALAGAR_IMG,amedrontar:MAGIA_AMEDRONTAR_IMG};
 function treasureCardFront(k,size){
   size=size||100;
   const clip='trclip_'+k+'_'+Math.random().toString(36).slice(2,9);
-  const w=size,h=Math.round(size*1.446);
+  const w=size,h=Math.round(size*CARD_RATIO);
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
     <defs><clipPath id="${clip}"><rect x="0.5" y="0.5" width="${w-1}" height="${h-1}" rx="${Math.round(size*0.06)}"/></clipPath></defs>
-    <image x="0" y="0" width="${w}" height="${h}" href="${TRE_IMGS[k]}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/>
+    <image x="0" y="0" width="${w}" height="${h}" href="${MAGIA_IMGS[k]}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/>
     ${cardFrameSVG(w,h,size)}
   </svg>`;
 }
 function treasureArtThumb(k,size){
-  // miniatura circular só com a arte da carta de tesouro, usada na lista "Cartas de tesouro"
+  // miniatura circular só com a arte da carta de magia, usada na lista "Cartas de Magia"
   size=size||28;
   const clip='trthumb_'+k+'_'+Math.random().toString(36).slice(2,7);
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
     <defs><clipPath id="${clip}"><circle cx="${size/2}" cy="${size/2}" r="${size/2-1}"/></clipPath></defs>
     <circle cx="${size/2}" cy="${size/2}" r="${size/2-0.5}" fill="#fff" stroke="#c9a15a" stroke-width="1"/>
-    <image x="${-size*0.15}" y="${-size*0.05}" width="${size*1.3}" height="${size*1.6}" href="${TRE_IMGS[k]}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/>
+    <image x="${-size*0.15}" y="${-size*0.05}" width="${size*1.3}" height="${size*1.6}" href="${MAGIA_IMGS[k]}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/>
   </svg>`;
 }
 /* ---- variantes "sem <svg> aninhado", para uso dentro do próprio <svg> do tabuleiro -----
@@ -1261,7 +1296,7 @@ function fichaCardFrontSVG(type,size){
   const imgs={ovo:FICHA_OVO_IMG,esterco:FICHA_ESTERCO_IMG,armadilha:FICHA_ARMADILHA_IMG};
   const uid=Math.random().toString(36).slice(2,7);
   const clip='fcsclip_'+type+'_'+uid;
-  const w=size,h=Math.round(size*1.446);
+  const w=size,h=Math.round(size*CARD_RATIO);
   const glow=type==='ovo';
   const glowId='eggGlowS_'+uid;
   const glowGrad=glow?`<radialGradient id="${glowId}" cx="50%" cy="40%" r="58%">
@@ -1283,7 +1318,7 @@ function fichaCardFrontSVG(type,size){
 function fichaCardBackSVG(size){
   size=size||100;
   const clip='fbsclip_'+Math.random().toString(36).slice(2,9);
-  const w=size,h=Math.round(size*1.446);
+  const w=size,h=Math.round(size*CARD_RATIO);
   return `<defs><clipPath id="${clip}"><rect x="0.5" y="0.5" width="${w-1}" height="${h-1}" rx="${Math.round(size*0.06)}"/></clipPath></defs>
     <image x="0" y="0" width="${w}" height="${h}" href="${FICHA_VERSO_IMG}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/>
     ${cardFrameSVG(w,h,size)}`;
@@ -1302,7 +1337,7 @@ function fichaArtThumb(type,size){
 
 function treasureSVG(k,size){size=size||44;const c=(size/2).toFixed(1),r=size*0.32;
   return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">'+
-    '<rect x="1" y="1" width="'+(size-2)+'" height="'+(size-2)+'" rx="'+(size*0.24).toFixed(1)+'" fill="'+TRE[k].c+'"/>'+
+    '<rect x="1" y="1" width="'+(size-2)+'" height="'+(size-2)+'" rx="'+(size*0.24).toFixed(1)+'" fill="'+MAGIA[k].c+'"/>'+
     treasureIconStr(k,+c,+c,r)+'</svg>';
 }
 
@@ -1418,19 +1453,20 @@ function renderVillages(){
       }
     }
     if(G.broken[id])vg.appendChild(el('circle',{cx:n.x,cy:n.y,r:VR+13,fill:'none',stroke:'#ea4335','stroke-width':3,'stroke-dasharray':'6 5'}));
-    // fichas guardadas: cartas em fileira, na vertical (sem rotação), bem espaçadas pra dar pra ver cada uma
+    // fichas guardadas: cartas em fileira, na vertical (sem rotação), tamanho médio ao lado
+    // do medalhão do vilarejo (sem zoom — ver openVillageModal para o tamanho grande, no clique)
     const list=G.vill[id]||[];
-    const CS=Math.round(VR*1.04),CH=Math.round(CS*1.446);
+    const CS=Math.round(VR*0.62),CH=Math.round(CS*CARD_RATIO);
     const n2=list.length, GAP=CS*0.66, pivotX=n.x,pivotY=n.y+VR*0.147;
     const fanHover=n2>0?el('g',{class:'fanHover'}):null;
     if(fanHover){
-      const hitR=CS*0.6+GAP*Math.max(n2-1,0)/2+8;
+      const hitR=CS*0.6+GAP*Math.max(n2-1,0)/2+16;
       const fh=el('circle',{cx:n.x,cy:n.y,r:hitR,fill:'transparent'});
-      fh.style.pointerEvents='all'; // área de detecção do hover/clique (os cartões em si podem ter pointer-events:none)
+      fh.style.pointerEvents='all'; // área de detecção do clique (os cartões em si podem ter pointer-events:none)
       fh.style.cursor='pointer';
       fanHover.appendChild(fh);
-      fanHover.addEventListener('mouseenter',()=>vg.parentNode&&vg.parentNode.appendChild(vg)); // traz o vilarejo pra frente enquanto amplia
-      fanHover.addEventListener('click',e=>{if(G.olho)return;e.stopPropagation();openVillageModal(id);});
+      fanHover.addEventListener('mouseenter',()=>vg.parentNode&&vg.parentNode.appendChild(vg)); // traz o vilarejo pra frente do vizinho, se sobrepuser
+      fanHover.addEventListener('click',e=>{e.stopPropagation();openVillageModal(id);});
       vg.appendChild(fanHover);
     }
     list.forEach((t,k)=>{
@@ -1444,9 +1480,7 @@ function renderVillages(){
       const glowCls=(shown&&t.type==='ovo')?' fcOvoGlow':'';
       const flipEl=el('g',{class:(justFlipped?'boardflip':'')+glowCls});
       flipEl.innerHTML=shown?fichaCardFrontSVG(t.type,CS):fichaCardBackSVG(CS);
-      if(G.olho){flipEl.style.cursor='pointer';flipEl.style.pointerEvents='auto';
-        flipEl.addEventListener('click',e=>{e.stopPropagation();useOlhoOn(id,k);});}
-      else flipEl.style.pointerEvents='none';
+      flipEl.style.pointerEvents='none';
       inner.appendChild(flipEl);outer.appendChild(inner);fanHover.appendChild(outer);
     });
     gV.appendChild(vg);
@@ -1467,7 +1501,7 @@ function renderPawns(){
       inner.appendChild(el('circle',{cx:0,cy:0,r:14*S,class:'pawnoutline'}));
       // ficha carregada: SEMPRE embaixo do peão (o peão em si nunca muda de forma/tamanho) — em tamanho bem visível.
       const carry=el('g',{class:'pawnCarry'});
-      const CW=22*S,CH=Math.round(CW*1.446),CY=18*S; // topo da carta logo abaixo do corpo do peão (r=14*S)
+      const CW=22*S,CH=Math.round(CW*CARD_RATIO),CY=18*S; // topo da carta logo abaixo do corpo do peão (r=14*S)
       function carryCardArt(symId,x,y){
         const wrap=el('g',{transform:'translate('+x+','+y+')',class:'carryCardWrap'});
         const u=el('use',{width:CW,height:CH,class:'carryCard'});
@@ -1514,7 +1548,7 @@ function renderPawns(){
     if(isMover){ring.setAttribute('stroke',p.color);ring.setAttribute('opacity','.5');
       glow.setAttribute('opacity','.22');glow.style.filter='blur(4px)';}
     else glow.setAttribute('opacity','0');
-    const canDrag=isMover&&G.phase==='move'&&!G.olho;
+    const canDrag=isMover&&G.phase==='move';
     g.classList.toggle('draggable',canDrag);
     const stepBadge=g.querySelector('.stepBadge');
     if(isMover&&G.phase==='move'){
@@ -1524,14 +1558,35 @@ function renderPawns(){
   });
 }
 
+/* ---------- ponto do clique/toque em coordenadas do SVG do tabuleiro ---------- */
+function svgPoint(e){
+  const svg=document.getElementById('board');
+  const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+/* mesma tolerância generosa usada tanto pro arrasto quanto pro toque solto: casa de
+   vilarejo (medalhão grande) aceita clique bem mais longe do centro que uma casa de trilha */
+function nodeTapThreshold(id){return N[id].type==='village'?VR+40:46*S;}
+/* acha, entre as opções de movimento válidas, a mais próxima de um ponto (em coords do SVG) */
+function nearestOption(pt){
+  const opts=options();
+  let best=null,bestD=Infinity;
+  opts.forEach(id=>{const n=N[id];const d=Math.hypot(n.x-pt.x,n.y-pt.y);if(d<bestD){bestD=d;best=id;}});
+  return{id:best,d:bestD};
+}
+/* ---------- toque solto (sem arrastar) perto de uma casa: o jogador não precisa acertar
+   o centro exato — sobretudo nas casas mais espremidas perto do Ninho — a casa de movimento
+   válida mais próxima do toque é escolhida, com a mesma tolerância do arrasto ---------- */
+function tapMove(e){
+  if(G.phase!=='move')return;
+  const{id:best,d}=nearestOption(svgPoint(e));
+  if(best&&d<nodeTapThreshold(best))onNode(best);
+}
+document.getElementById('board').addEventListener('click',tapMove);
+
 /* ---------- arrasta o peão até uma casa adjacente destacada; solta perto dela e ele encaixa sozinho ---------- */
 function attachPawnDrag(g,p){
-  const svg=document.getElementById('board');
   let dragging=false;
-  function toSvg(e){
-    const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
-    return pt.matrixTransform(svg.getScreenCTM().inverse());
-  }
   g.addEventListener('pointerdown',e=>{
     if(!g.classList.contains('draggable'))return;
     dragging=true;g.classList.add('dragging');g.classList.remove('snap');
@@ -1541,18 +1596,14 @@ function attachPawnDrag(g,p){
   });
   g.addEventListener('pointermove',e=>{
     if(!dragging)return;
-    const pt=toSvg(e);
+    const pt=svgPoint(e);
     g.style.transform='translate('+pt.x+'px,'+pt.y+'px)';
   });
   function endDrag(e){
     if(!dragging)return;
     dragging=false;g.classList.remove('dragging');g.style.transition='';
-    const pt=toSvg(e);
-    const opts=options();
-    let best=null,bestD=Infinity;
-    opts.forEach(id=>{const n=N[id];const d=Math.hypot(n.x-pt.x,n.y-pt.y);if(d<bestD){bestD=d;best=id;}});
-    const threshold=(best&&N[best].type==='village'?VR+40:46*S);
-    if(best&&bestD<threshold){
+    const{id:best,d}=nearestOption(svgPoint(e));
+    if(best&&d<nodeTapThreshold(best)){
       g.classList.add('snap');
       onNode(best);
       setTimeout(()=>g.classList.remove('snap'),340);
@@ -1572,7 +1623,7 @@ function eggsOf(p){return (G.vill[p.home]||[]).filter(t=>t.type==='ovo').length
   + p.carried.filter(t=>t.type==='ovo').length;}
 
 function renderAll(){
-  $('mRound').textContent=G.round+'/20';
+  $('mRound').textContent=G.round+'/24';
   $('mSeason').textContent=SEASONS[G.season].n;
   $('mDragon').style.display=G.dragon?'flex':'none';
   const ab=$('autoBtn');if(ab)ab.disabled=!((G.phase==='roll'||G.phase==='move')&&G.mover===G.turn);
@@ -1684,7 +1735,7 @@ function acts(list){return '<div class="acts">'+list.map(a=>
    8. FLUXO DE TURNO
    ============================================================ */
 function startTurn(){
-  G.mover=G.turn;G.pinote=false;G.olho=false;
+  G.mover=G.turn;G.pinote=false;
   const p=G.players[G.turn];
   if(p.skip){p.skip=false;G.phase='idle';renderAll();log(p.name+' está parado nesta rodada.');
     setState('Parado por causa de uma armadilha. Turno perdido.');
@@ -1738,7 +1789,7 @@ function resolveRoll(p,raw){
     openModal('<h2 style="text-align:center">⚡ Você tomou um Raio!</h2>'+
       '<div class="body" style="text-align:center">'+
       '<img src="'+SHOCK_IMG+'" alt="Raio" style="width:100%;max-width:520px;border-radius:14px;display:block;margin:0 auto 16px;box-shadow:0 10px 26px rgba(0,0,0,.4)">'+
-      '<p class="lead">Durante o evento <b>Tempestade</b>, tirar <b>1</b> ou <b>6</b> no dado atrai um raio sobre seu peão. O movimento deste turno é cancelado. Enquanto a Tempestade durar, fique de olho nesses números — o céu não perdoa!</p></div>'+
+      '<p class="lead">Escolha uma opção</p></div>'+
       acts([{id:'ok',t:'Passar a vez'}]));
     let done=false;
     const goOn=()=>{if(done)return;done=true;closeModal();endTurn();};
@@ -1789,7 +1840,6 @@ function highlight(){
   prompt(p.name+' · '+G.steps+' passo'+(G.steps>1?'s':''),'Você não pode repassar por uma casa já visitada nesta jogada. Entrar no Ninho do Dragão zera o resto do movimento.','Aguardando escolha',null);
 }
 function onNode(id){
-  if(G.olho)return;
   if(G.phase!=='move')return;
   if(!options().includes(id))return;
   step(id);
@@ -1812,7 +1862,6 @@ function arrive(id){
     p.carried.forEach(t=>G.vill[id].push({type:t.type,revealed:t.revealed||G.broken[id]}));
     log(p.name+' guardou '+p.carried.length+' ficha(s) no vilarejo.');
     p.carried=[];renderAll();SFX.play('egg');
-    if(eggsOf(p)>=8)return gameOver('eggs',p);
   }
 
   if(G.pinote){                       // fuga (pinote): não dispara novos encontros
@@ -1833,7 +1882,10 @@ function arrive(id){
   }
   if(id!==p.home){
     const others=G.players.filter(x=>x.i!==p.i&&x.pos===id);
-    if(others.length){G.phase='idle';renderAll();return bumpChoiceModal(p,others[0]);}
+    // só vale a pena parar pra Trombada se alguém ali tiver alguma ficha pra roubar
+    const alvo=others.find(x=>x.carried.length>0);
+    if(alvo){G.phase='idle';renderAll();return bumpChoiceModal(p,alvo);}
+    if(others.length)log(p.name+' passou por '+others.map(x=>x.name).join(', ')+' sem nada para roubar.');
   }
   continueMove();
 }
@@ -1871,7 +1923,7 @@ const FICHA_DESC={ovo:'Leve até seu vilarejo para pontuar.',
   esterco:'Não faz nada — mas ninguém precisa saber.',
   armadilha:'Quem roubar esta ficha perde uma rodada.'};
 function bigCard(o){
-  const w=o.w,h=Math.round(w*1.446);
+  const w=o.w,h=Math.round(w*CARD_RATIO);
   const face=o.front
     ? '<span class="art flip3d" id="'+o.id+'_fl" style="width:'+w+'px;height:'+h+'px">'+
         '<span class="f back">'+o.back+'<span class="sheen"></span></span>'+
@@ -1907,17 +1959,17 @@ function chooseCard(rowId,el,shift,after,delay){
 function nestChoiceModal(p){
   const full=!canCarryMore(p);
   const W=200,STEP=W+34;                       // largura da carta + gap da .cardRow
-  openModal('<div class="plateBox">'+
+  openModal('<div class="cardBox">'+
     '<div class="eyebrow">Ninho do Dragão</div>'+
     '<h2>Escolha o seu prêmio</h2>'+
     '<p class="lead">'+(full
-      ? 'Suas mãos já estão cheias de fichas — resta o baralho de tesouro.'
-      : 'O movimento do turno acabou aqui. Uma ficha às cegas do monte, ou uma carta de tesouro?')+'</p>'+
+      ? 'Suas mãos já estão cheias de fichas — resta o baralho de Magia.'
+      : 'O movimento do turno acabou aqui. Uma ficha do monte, ou uma carta de Magia?')+'</p>'+
     '<div class="cardRow" id="nestRow">'+
-      bigCard({id:'pkF',w:W,back:fichaCardBack(W),title:'Ficha',sub:'1 de 3, às cegas',i:0,
+      bigCard({id:'pkF',w:W,back:fichaCardBack(W),title:'Ficha',sub:'Escolha 1 de 3, reveladas',i:0,
         dis:full,ribbon:full?'Mãos cheias':''})+
-      bigCard({id:'pkT',w:W,back:treasureCardBack(W),title:'Tesouro',sub:'1 carta do baralho',i:1})+
-    '</div></div>','plate');
+      bigCard({id:'pkT',w:W,back:treasureCardBack(W),title:'Magia',sub:'1 carta do baralho',i:1})+
+    '</div></div>','cardWhite');
   wireHover('nestRow');
   if(!full)$('pkF').onclick=()=>chooseCard('nestRow',$('pkF'),STEP/2,pickTokens);
   $('pkT').onclick=()=>chooseCard('nestRow',$('pkT'),-STEP/2,pickTreasure);
@@ -1925,34 +1977,30 @@ function nestChoiceModal(p){
 function pickTokens(){
   const three=[G.pool.pop(),G.pool.pop(),G.pool.pop()].filter(Boolean);
   const W=180,STEP=W+30;
-  openModal('<div class="plateBox">'+
+  // as 3 fichas nascem viradas pra cima de propósito: a escolha é estratégica, não às cegas
+  openModal('<div class="cardBox">'+
     '<div class="eyebrow">Ninho do Dragão</div>'+
     '<h2>Escolha 1 de 3 fichas</h2>'+
-    '<p class="lead">As outras duas voltam ao monte sem serem reveladas.</p>'+
+    '<p class="lead">As fichas estão reveladas. Escolha uma — as outras duas voltam ao monte.</p>'+
     '<div class="cardRow tight" id="tokRow">'+three.map((t,i)=>
-      bigCard({id:'tk'+i,w:W,back:fichaCardBack(W),front:fichaCardFront(t,W),i:i}))
+      bigCard({id:'tk'+i,w:W,back:fichaCardFront(t,W),i:i}))
       .join('')+
-    '</div><div id="tokFoot"></div></div>','plate');
+    '</div><div id="tokFoot"></div></div>','cardWhite');
   wireHover('tokRow');
   three.forEach((t,i)=>{
     const btn=$('tk'+i);
     btn.onclick=()=>{
-      // a escolhida vai pro meio, vira, e só então a legenda + botão aparecem
+      // a escolhida vai pro meio (já revelada) e só então a legenda + botão aparecem
       const ok=chooseCard('tokRow',btn,(1-i)*STEP,()=>{
-        $('tk'+i+'_fl').classList.add('flipped');
-        SFX.play('cardFlip');
-        setTimeout(()=>{
-          SFX.play(t==='ovo'?'egg':t==='esterco'?'dung':'trap');
-          $('tokFoot').innerHTML='<div class="revealTxt"><b>'+FICHA_NOME[t]+'</b>'+
-            '<span>'+FICHA_DESC[t]+'</span></div>'+acts([{id:'ok',t:'Continuar'}]);
-          $('ok').onclick=()=>{
-            const srcEl=$('tk'+i+'_fl');
-            const rect=srcEl?srcEl.getBoundingClientRect():null;
-            closeModal();
-            afterAction('Ficha guardada em mãos','Volte ao seu vilarejo para depositá-la.');
-            if(rect)flyFichaToCarried(t,rect);
-          };
-        },460);
+        SFX.play(t==='ovo'?'egg':t==='esterco'?'dung':'trap');
+        $('tokFoot').innerHTML='<div class="revealTxt"><b>'+FICHA_NOME[t]+'</b>'+
+          '<span>'+FICHA_DESC[t]+'</span></div>'+acts([{id:'ok',t:'Continuar'}]);
+        $('ok').onclick=()=>{
+          const rect=btn.getBoundingClientRect();
+          closeModal();
+          afterAction('Ficha guardada em mãos','Volte ao seu vilarejo para depositá-la.');
+          flyFichaToCarried(t,rect);
+        };
       },400);
       if(!ok)return;
       const p=G.players[G.mover];p.carried.push({type:t,revealed:false});
@@ -1986,25 +2034,25 @@ function flyFichaToCarried(type,srcRect){
   setTimeout(()=>clone.remove(),650);
 }
 function pickTreasure(){
-  const c=G.treasure.pop();const p=G.players[G.mover];
-  if(!c){closeModal();return afterAction('Baralho vazio','Não há mais cartas de tesouro.');}
+  const c=G.magia.pop();const p=G.players[G.mover];
+  if(!c){closeModal();return afterAction('Baralho vazio','Não há mais cartas de Magia.');}
   p.cards.push(c);
   const W=210;
-  openModal('<div class="plateBox">'+
-    '<div class="eyebrow">Baralho de Tesouro</div>'+
+  openModal('<div class="cardBox">'+
+    '<div class="eyebrow">Baralho de Magia</div>'+
     '<h2>Uma carta é sua</h2>'+
     '<div class="cardRow" id="treRow">'+
       bigCard({id:'trC',w:W,back:treasureCardBack(W),front:treasureCardFront(c,W),still:true})+
       '<span class="burst" id="trBurst"></span>'+
-    '</div><div id="treFoot"></div></div>','plate');
+    '</div><div id="treFoot"></div></div>','cardWhite');
   // vira sozinha logo depois de entrar; o clarão e o texto vêm no fim da virada
   setTimeout(()=>{$('trC_fl').classList.add('flipped');SFX.play('cardFlip');},280);
   setTimeout(()=>{
     SFX.play('treasure');
     const b=$('trBurst');if(b)b.classList.add('on');
-    $('treFoot').innerHTML='<div class="revealTxt"><b>'+TRE[c].n+'</b><span>'+TRE[c].d+'</span></div>'+
+    $('treFoot').innerHTML='<div class="revealTxt"><b>'+MAGIA[c].n+'</b><span>'+MAGIA[c].d+'</span></div>'+
       acts([{id:'ok',t:'Continuar'}]);
-    $('ok').onclick=()=>{closeModal();afterAction('Tesouro obtido','A carta fica na sua mão até ser usada.');};
+    $('ok').onclick=()=>{closeModal();afterAction('Magia obtida','A carta fica na sua mão até ser usada.');};
   },680);
   renderAll();
 }
@@ -2051,7 +2099,7 @@ function applyDragonOutcome(p,r){
     log(p.name+' tirou '+r+' e foi amaldiçoado pelo dragão.');
     openModal('<h2 style="text-align:center">Maldição do Dragão · '+r+'</h2>'+
       '<div class="body" style="text-align:center">'+
-      '<img src="'+EVT_MODAL.maldicao+'" alt="Maldição do Dragão" style="width:100%;border-radius:12px;display:block">'+
+      '<img src="'+EVT_CARD.maldicao+'" alt="Maldição do Dragão" style="max-width:220px;width:100%;border-radius:12px;display:block;margin:0 auto;box-shadow:0 10px 22px rgba(0,0,0,.3)">'+
       '<p class="lead" style="margin-top:14px">Enquanto o dragão estiver no ninho você <b>não pode roubar nada</b> — mas continua podendo ser roubado.</p></div>'+
       acts([{id:'ok',t:'Continuar'}]));
     $('ok').onclick=()=>{closeModal();renderAll();afterAction('Amaldiçoado','O dragão te amaldiçoou: sem roubos enquanto ele estiver no ninho.');};
@@ -2087,20 +2135,16 @@ function invadeChoiceModal(p,vid,owner){
   if(has)$('yes').onclick=()=>{closeModal();invadeModal(p,vid,owner);};
 }
 function invadeModal(p,vid,owner){
-  const list=G.vill[vid];let sopro=false;
-  const draw=()=>{
-    openModal('<h2>Invadir vilarejo</h2><p class="lead">Sem rolagem de dado: escolha uma ficha e revele para todos.</p>'+
-      '<div class="body"><div class="picks" style="flex-wrap:wrap">'+list.map((t,i)=>{
-        const shown=sopro||t.revealed||G.broken[vid];
-        return '<div class="pick'+(shown?' flip':'')+'" id="iv'+i+'">'+(shown?fichaCardFront(t.type,64):fichaCardBack(64))+
-        (shown?'':'<span class="cap">Oculta</span>')+'</div>';}).join('')+
-      '</div></div>'+
-      acts([{id:'sp',t:'Usar Sopro de Dragão',ghost:true,dis:sopro||!p.cards.includes('sopro')},{id:'no',t:'Desistir',ghost:true}]));
-    $('no').onclick=()=>{closeModal();log(p.name+' desistiu do roubo.');continueMove();};
-    $('sp').onclick=()=>{if(!p.cards.includes('sopro'))return;
-      p.cards.splice(p.cards.indexOf('sopro'),1);sopro=true;log(p.name+' usou Sopro de Dragão.');renderAll();draw();};
-    list.forEach((t,i)=>$('iv'+i).onclick=()=>resolveSteal(p,vid,i));
-  };draw();
+  const list=G.vill[vid];
+  openModal('<h2>Invadir vilarejo</h2><p class="lead">Sem rolagem de dado: escolha uma ficha e revele para todos.</p>'+
+    '<div class="body"><div class="picks" style="flex-wrap:wrap">'+list.map((t,i)=>{
+      const shown=t.revealed||G.broken[vid];
+      return '<div class="pick'+(shown?' flip':'')+'" id="iv'+i+'">'+(shown?fichaCardFront(t.type,64):fichaCardBack(64))+
+      (shown?'':'<span class="cap">Oculta</span>')+'</div>';}).join('')+
+    '</div></div>'+
+    acts([{id:'no',t:'Desistir',ghost:true}]));
+  $('no').onclick=()=>{closeModal();log(p.name+' desistiu do roubo.');continueMove();};
+  list.forEach((t,i)=>$('iv'+i).onclick=()=>resolveSteal(p,vid,i));
 }
 function resolveSteal(p,vid,idx){
   const t=G.vill[vid][idx];
@@ -2109,9 +2153,9 @@ function resolveSteal(p,vid,idx){
     log(p.name+' roubou um Ovo de Dragão.');SFX.play('stealOk');
     closeModal();afterAction('Ovo roubado','A ficha está em suas mãos. Leve-a ao seu vilarejo.');
   }else if(t.type==='esterco'){
-    t.revealed=true;closeModal();SFX.play('dung');
-    log(p.name+' revelou Esterco de Dragão. Nada acontece.');
-    afterAction('Esterco de Dragão','Nada acontece. A ficha permanece revelada no vilarejo.');
+    closeModal();SFX.play('dung');
+    log(p.name+' revelou Esterco de Dragão. Nada acontece — a ficha permanece oculta no vilarejo.');
+    afterAction('Esterco de Dragão','Nada acontece. A ficha permanece guardada, oculta, no vilarejo.');
   }else{
     G.vill[vid].splice(idx,1);
     closeModal();renderAll();
@@ -2120,16 +2164,7 @@ function resolveSteal(p,vid,idx){
 }
 function applyTrap(p,title){
   SFX.play('trap');
-  // Escama de Dragão agora é usada a qualquer momento (painel de tesouro), não reativamente aqui:
-  // se o jogador já tinha armado o escudo antes, ele absorve a armadilha automaticamente.
-  if(p.escamaShield){
-    p.escamaShield=false;
-    log(p.name+' tinha a Escama de Dragão armada e ela anulou a armadilha.');
-    openModal('<h2>'+title+'</h2><p class="lead">A Escama de Dragão que '+p.name+' já havia armado brilhou e anulou a armadilha.</p>'+
-      acts([{id:'ok',t:'Continuar'}]));
-    $('ok').onclick=()=>{closeModal();afterAction('Armadilha anulada','A Escama de Dragão (armada com antecedência) cancelou o efeito.');};
-    return;
-  }
+  // Amedrontar é uma defesa só contra Roubo — não anula Armadilha (manual, seção 15).
   openModal('<h2>'+title+'</h2><p class="lead">A ficha era uma armadilha: '+p.name+' fica sem jogar 1 rodada e a armadilha sai do jogo.</p>'+
     acts([{id:'ok',t:'Aceitar'}]));
   $('ok').onclick=()=>{p.skip=true;log(p.name+' caiu na armadilha e perde 1 rodada.');closeModal();
@@ -2153,46 +2188,38 @@ function bumpModal(p,alvo){
     $('ok').onclick=()=>{closeModal();afterAction('Nada a roubar','Não havia ficha para tomar.');};
     return;
   }
-  let sopro=false;
   const draw=()=>{
     const preview=alvo.carried.map(t=>{
-      const shown=sopro||t.revealed;
+      const shown=t.revealed;
       return '<div class="pick'+(shown?' flip':'')+'" style="pointer-events:none">'+
         (shown?fichaCardFront(t.type,56):fichaCardBack(56))+(shown?'':'<span class="cap">Oculta</span>')+'</div>';
     }).join('');
-    openModal('<h2>Tentativa de roubo</h2><p class="lead">Ambos rolam o dado: maior número vence. Empate ou derrota dá um pinote de 3 movimentos a quem foi atacado.</p>'+
+    openModal('<h2>Tentativa de roubo</h2><p class="lead">Ambos rolam o dado: maior número vence. Empate ou derrota dá um pinote de 2 movimentos a quem foi atacado.</p>'+
       '<div class="body"><div class="picks" style="margin-bottom:18px">'+preview+'</div><div class="duel">'+
       '<div class="side2"><div class="nm">'+p.name+'</div><div class="big" id="d1">?</div></div><div class="vs">vs</div>'+
       '<div class="side2"><div class="nm">'+alvo.name+'</div><div class="big" id="d2">?</div></div></div></div>'+
-      acts([{id:'sp',t:'Usar Sopro de Dragão',ghost:true,dis:sopro||!p.cards.includes('sopro')},{id:'go',t:'Rolar dados'}]));
-    $('sp').onclick=()=>{
-      if(!p.cards.includes('sopro'))return;
-      p.cards.splice(p.cards.indexOf('sopro'),1);sopro=true;
-      alvo.carried.forEach(t=>t.revealed=true);
-      log(p.name+' usou Sopro de Dragão e revelou as fichas de '+alvo.name+'.');
-      renderAll();draw();
-    };
+      acts([{id:'go',t:'Rolar dados'}]));
     $('go').onclick=()=>{
       const a=1+(Math.random()*6|0),b=1+(Math.random()*6|0);
       $('d1').textContent=a;$('d2').textContent=b;showDie(a,true);
-      $('go').disabled=true;if($('sp'))$('sp').disabled=true;
+      $('go').disabled=true;
       setTimeout(()=>{
         if(a>b){
-          if(alvo.escamaShield){
-            alvo.escamaShield=false;
-            log(alvo.name+' tinha a Escama de Dragão armada e ela anulou o roubo.');SFX.play('stealFail');
-            closeModal();return afterAction('Roubo anulado','A Escama de Dragão de '+alvo.name+' (armada com antecedência) cancelou a ação.');}
+          if(alvo.medoShield){
+            alvo.medoShield=false;
+            log(alvo.name+' tinha Amedrontar armado e ele impediu o roubo.');SFX.play('stealFail');
+            closeModal();return afterAction('Roubo impedido','Amedrontar (armado com antecedência) cancelou a ação.');}
           const t=alvo.carried.pop();p.carried.push(t);
           log(p.name+' venceu a briga ('+a+'×'+b+') e roubou uma ficha.');SFX.play('stealOk');
           closeModal();afterAction('Roubo bem-sucedido','A ficha mudou de mãos.');
         }else{
-          log(alvo.name+' escapou ('+a+'×'+b+') e deu um pinote de 3 movimentos.');SFX.play('stealFail');
+          log(alvo.name+' escapou ('+a+'×'+b+') e deu um pinote de 2 movimentos.');SFX.play('stealFail');
           closeModal();renderAll();
           G.pinote=true;G.pinoteReturn={mover:p.i,steps:G.steps};
-          G.mover=alvo.i;G.steps=3;G.prev=null;G.phase='move';
+          G.mover=alvo.i;G.steps=2;G.prev=null;G.phase='move';
           SFX.resetSteps();
           renderPawns();highlight();
-          setState('Pinote! '+alvo.name+' anda 3 casas imediatamente.');
+          setState('Pinote! '+alvo.name+' anda 2 casas imediatamente.');
         }
       },3000);
     };
@@ -2297,7 +2324,6 @@ async function autoMoveLoop(p){
       p.carried=[];renderAll();SFX.play('egg');
       autoNote('Depósito', p.name+' (IA) guardou fichas no vilarejo.');
       await sleep(600);
-      if(eggsOf(p)>=8){gameOver('eggs',p);return;}
     }
     if(N[next].nest){G.steps=0;await autoResolveNest(p);return;}
     if(next!==p.home&&N[next].type==='village'&&canCarryMore(p)&&!p.cursed){
@@ -2341,21 +2367,15 @@ async function autoResolveNest(p){
     p.carried.push({type:pick,revealed:false});
     SFX.play(pick==='ovo'?'egg':pick==='esterco'?'dung':'trap');
     autoNote('Ficha escolhida',p.name+' (IA) pegou uma ficha do ninho.');
-  }else if(G.treasure.length){
-    const c=G.treasure.pop();p.cards.push(c);SFX.play('treasure');
-    autoNote('Tesouro obtido',p.name+' (IA) pegou uma carta de tesouro.');
+  }else if(G.magia.length){
+    const c=G.magia.pop();p.cards.push(c);SFX.play('treasure');
+    autoNote('Magia obtida',p.name+' (IA) comprou uma carta de Magia.');
   }
   renderAll();await sleep(600);
 }
 async function autoInvade(p,vid,owner){
   autoNote('Invasão',p.name+' (IA) tenta roubar o vilarejo de '+(owner?owner.name:'?')+'.');
   await sleep(450);
-  if(p.cards.includes('sopro')){
-    p.cards.splice(p.cards.indexOf('sopro'),1);
-    G.vill[vid].forEach(x=>x.revealed=true);
-    autoNote('Sopro de Dragão','A IA revelou as fichas antes de escolher.');
-    renderAll();await sleep(500);
-  }
   const list=G.vill[vid];
   const visible=list.map((x,i)=>({x,i})).filter(v=>v.x.revealed||G.broken[vid]);
   let idx=0;
@@ -2370,17 +2390,12 @@ async function autoInvade(p,vid,owner){
     SFX.play('stealOk');
     autoNote('Roubo!','A IA roubou um Ovo de Dragão.');
   }else if(t.type==='esterco'){
-    t.revealed=true;SFX.play('dung');autoNote('Esterco de Dragão','Nada acontece.');
+    SFX.play('dung');autoNote('Esterco de Dragão','Nada acontece — a ficha permanece oculta.');
   }else{
     G.vill[vid].splice(idx,1);SFX.play('trap');
-    // Escama agora só protege se já tiver sido armada de antemão (painel de tesouro) — a IA não arma sozinha.
-    if(p.escamaShield){
-      p.escamaShield=false;
-      autoNote('Armadilha anulada','A Escama de Dragão da IA (já armada) anulou o efeito.');
-    }else{
-      p.skip=true;
-      autoNote('Armadilha!','A IA cai numa armadilha e perde a próxima rodada.');
-    }
+    // Amedrontar não protege contra Armadilha (manual, seção 15) — só contra Roubo.
+    p.skip=true;
+    autoNote('Armadilha!','A IA cai numa armadilha e perde a próxima rodada.');
   }
   renderAll();await sleep(700);
 }
@@ -2388,28 +2403,22 @@ async function autoBump(p,alvo){
   if(!alvo.carried.length)return;
   autoNote('Trombada',p.name+' (IA) tenta roubar '+alvo.name+'.');
   await sleep(450);
-  if(p.cards.includes('sopro')){
-    p.cards.splice(p.cards.indexOf('sopro'),1);
-    alvo.carried.forEach(t=>t.revealed=true);
-    autoNote('Sopro de Dragão','A IA revelou as fichas de '+alvo.name+' antes de decidir.');
-    renderAll();await sleep(500);
-  }
   const a=1+(Math.random()*6|0),b=1+(Math.random()*6|0);
   showDie(a,true);
   autoNote('Dados da disputa',a+' × '+b+'.');
   await sleep(1000);
   if(a>b){
-    if(alvo.escamaShield){
-      alvo.escamaShield=false;SFX.play('stealFail');
-      autoNote('Roubo anulado',alvo.name+' tinha a Escama de Dragão armada.');
+    if(alvo.medoShield){
+      alvo.medoShield=false;SFX.play('stealFail');
+      autoNote('Roubo impedido',alvo.name+' tinha Amedrontar armado.');
     }else{
       const t=alvo.carried.pop();p.carried.push(t);SFX.play('stealOk');
       autoNote('Roubo!','A IA venceu a disputa e levou a ficha.');
     }
   }else{
     SFX.play('stealFail');
-    autoNote('Pinote!',alvo.name+' escapou e anda 3 casas.');
-    let left=3,prevx=null,cur=alvo.pos;
+    autoNote('Pinote!',alvo.name+' escapou e anda 2 casas.');
+    let left=2,prevx=null,cur=alvo.pos;
     for(let k=0;k<left;k++){
       let opts=N[cur].adj.filter(x=>!N[x].nest&&x!==prevx);
       if(!opts.length)opts=N[cur].adj.filter(x=>!N[x].nest);
@@ -2422,23 +2431,12 @@ async function autoBump(p,alvo){
   renderAll();await sleep(500);
 }
 
-/* ---------- Olho de Dragão ---------- (qualquer jogador arma a qualquer momento pelo painel de tesouro;
-   G.olho guarda {k, playerIdx} — não precisa ser a vez de quem armou) */
-function useOlhoOn(vid,idx){
-  const p=G.players[G.olho.playerIdx];
-  if(vid===p.home){log('Escolha uma ficha de outro jogador.');return;}
-  G.vill[vid][idx].revealed=true;
-  p.cards.splice(G.olho.k,1);G.olho=false;
-  log(p.name+' marcou uma ficha com o Olho de Dragão.');
-  SFX.play('cardFlip');
-  renderAll();setState('Ficha marcada: fica revelada permanentemente.');
-}
-
 /* ============================================================
-   PAINEL DE TESOURO — qualquer jogador usa qualquer carta a qualquer momento;
-   a carta é descartada assim que a ação é decidida (Escama arma um escudo que
-   reage sozinho no próximo roubo/armadilha; Sopro espia um vilarejo agora;
-   Olho arma a mira e descarta quando a ficha é marcada).
+   PAINEL DE MAGIA — qualquer jogador usa qualquer carta a qualquer momento;
+   a carta é descartada assim que a ação é decidida (manual, seção 11):
+   Amedrontar arma uma defesa que reage sozinha no próximo roubo sofrido
+   (nunca contra Armadilha); Visão de Dragão espia 2 fichas de um vilarejo
+   agora; Alagar soma 2 marcadores de água num vilarejo à escolha.
    ============================================================ */
 function renderTreasures(){
   const box=$('treasures');if(!box)return;
@@ -2446,13 +2444,11 @@ function renderTreasures(){
   box.innerHTML=withCards.length?withCards.map(pl=>{
     const rows=pl.cards.map((c,k)=>{
       let cls='card',badge='';
-      if(c==='escama'&&pl.escamaShield){cls+=' shielded';badge='<span class="badge">Armada</span>';}
-      else if(c==='olho'&&G.olho&&G.olho.playerIdx===pl.i&&G.olho.k===k){cls+=' shielded';badge='<span class="badge">Mirando…</span>';}
-      else if(c==='olho'&&G.olho){cls+=' dis';}
+      if(c==='amedrontar'&&pl.medoShield){cls+=' shielded';badge='<span class="badge">Armada</span>';}
       else{cls+=' usable';badge='<span class="badge">Usar</span>';}
       return '<div class="'+cls+'" data-p="'+pl.i+'" data-k="'+k+'">'+
         '<div class="icwrap">'+treasureArtThumb(c,36)+'</div>'+
-        '<div><div class="ttl">'+TRE[c].n+'</div><div class="sub">'+TRE[c].d+'</div></div>'+badge+'</div>';
+        '<div><div class="ttl">'+MAGIA[c].n+'</div><div class="sub">'+MAGIA[c].d+'</div></div>'+badge+'</div>';
     }).join('');
     return '<div class="treGroup"><div class="treHead"><span class="dot" style="background:'+pl.color+'"></span>'+pl.name+'</div>'+rows+'</div>';
   }).join(''):'<span class="empty">Nenhuma carta em nenhuma mão</span>';
@@ -2463,30 +2459,31 @@ function renderTreasures(){
 function useTreasure(playerIdx,k){
   const p=G.players[playerIdx];
   const c=p&&p.cards[k];if(!c)return;
-  if(c==='escama'){
-    if(p.escamaShield)return;
-    p.cards.splice(k,1);p.escamaShield=true;
-    log(p.name+' armou a Escama de Dragão — protegido do próximo roubo ou armadilha sofrido.');
+  if(c==='amedrontar'){
+    if(p.medoShield)return;
+    p.cards.splice(k,1);p.medoShield=true;
+    log(p.name+' armou Amedrontar — protegido do próximo roubo sofrido (não vale contra Armadilha).');
     SFX.play('bless');
     renderAll();
-  }else if(c==='sopro'){
+  }else if(c==='visao'){
     p.cards.splice(k,1);
-    log(p.name+' usou o Sopro de Dragão para espiar um vilarejo.');
+    log(p.name+' usou Visão de Dragão para espiar um vilarejo.');
     SFX.play('cardFlip');
     renderAll();
-    openSoproPeek(p);
-  }else if(c==='olho'){
-    G.olho={k,playerIdx};
-    log(p.name+' preparou o Olho de Dragão — escolha uma ficha em outro vilarejo para marcá-la.');
-    setState('Olho de Dragão armado por '+p.name+': toque numa ficha em outro vilarejo.');
+    openVisaoPeek(p);
+  }else if(c==='alagar'){
+    p.cards.splice(k,1);
+    log(p.name+' usou Alagar — escolha um vilarejo.');
+    SFX.play('cardFlip');
     renderAll();
+    openAlagarPick(p);
   }
 }
-/* espiada livre do Sopro: escolhe qualquer vilarejo e revela o conteúdo só nesta olhada
-   (não marca t.revealed — é um vislumbre, não uma revelação permanente) */
-function openSoproPeek(p){
+/* Visão de Dragão: escolhe um jogador/vilarejo e vê 2 fichas guardadas ali, em segredo
+   (não marca t.revealed — é um vislumbre só para quem usou a magia) */
+function openVisaoPeek(p){
   const ids=VILLAGE_IDS.filter(id=>N[id]&&N[id].type==='village');
-  openModal('<h2>Sopro de Dragão</h2><p class="lead">Escolha um vilarejo para espiar tudo o que está guardado nele.</p>'+
+  openModal('<h2>Visão de Dragão</h2><p class="lead">Escolha um jogador para ver 2 fichas guardadas no Vilarejo dele.</p>'+
     '<div class="body"><div class="picks">'+ids.map(id=>{
       const owner=G.players.find(pl=>pl.home===id);
       const n=(G.vill[id]||[]).length;
@@ -2497,32 +2494,53 @@ function openSoproPeek(p){
   $('cancel').onclick=closeModal;
   ids.forEach(id=>{
     const elc=$('sv_'+id);if(!elc)return;
-    elc.onclick=()=>soproPeekReveal(p,id);
+    elc.onclick=()=>visaoPeekReveal(p,id);
   });
 }
-function soproPeekReveal(p,vid){
+function visaoPeekReveal(p,vid){
   const owner=G.players.find(pl=>pl.home===vid);
-  const list=G.vill[vid]||[];
+  const list=(G.vill[vid]||[]).slice(0,2);
   SFX.play('cardFlip');
   openModal('<h2>Vilarejo de '+(owner?owner.name:'?')+'</h2><p class="lead">'+
-    (list.length?('O Sopro de Dragão de '+p.name+' revela o que está escondido aqui — só para os seus olhos.')
+    (list.length?('A Visão de Dragão de '+p.name+' revela até 2 fichas guardadas aqui — só para os seus olhos.')
       :'Não há fichas guardadas aqui agora.')+'</p>'+
     '<div class="body"><div class="picks" style="flex-wrap:wrap">'+
     list.map(t=>'<div class="pick" style="pointer-events:none">'+fichaCardFront(t.type,72)+'</div>').join('')+
     '</div></div>'+acts([{id:'ok',t:'Fechar'}]));
   $('ok').onclick=closeModal;
 }
+/* Alagar: escolhe um vilarejo e soma 2 marcadores de água (mesmo teto de 3 dos eventos) */
+function openAlagarPick(p){
+  const ids=VILLAGE_IDS.filter(id=>N[id]&&N[id].type==='village');
+  openModal('<h2>Alagar</h2><p class="lead">Escolha um vilarejo para receber +2 marcadores de água.</p>'+
+    '<div class="body"><div class="picks">'+ids.map(id=>{
+      const owner=G.players.find(pl=>pl.home===id);
+      return '<div class="pick" id="al_'+id+'" style="cursor:pointer;min-width:104px">'+
+        '<div style="font-size:13px;font-weight:600">'+(owner?owner.name:'?')+'</div>'+
+        '<div class="cap">'+(G.water[id]||0)+' de água</div></div>';
+    }).join('')+'</div></div>'+acts([{id:'cancel',t:'Fechar',ghost:true}]));
+  $('cancel').onclick=closeModal;
+  ids.forEach(id=>{
+    const elc=$('al_'+id);if(!elc)return;
+    elc.onclick=()=>{
+      const owner=G.players.find(pl=>pl.home===id);
+      addWaterTo(id,2);
+      log(p.name+' usou Alagar no vilarejo de '+(owner?owner.name:'?')+'.');
+      closeModal();renderAll();
+    };
+  });
+}
 
 /* ============================================================
    9. RODADAS E EVENTOS
    ============================================================ */
 function endTurn(){
-  // Ventos da Sorte: no fim da jogada o jogador escolhe entre andar +2 casas ou comprar 1 Tesouro
+  // Ventos da Sorte: no fim da jogada o jogador escolhe entre andar +2 casas ou ganhar 1 carta de Magia
   if(G.event==='ventos'&&!G.ventosUsed&&!G.pinote){
     G.ventosUsed=true;
     if(G.phase==='auto'){
       const p=G.players[G.turn];
-      if(G.treasure.length){p.cards.push(G.treasure.pop());log(p.name+' (IA) aproveitou os Ventos da Sorte e comprou um Tesouro.');}
+      if(G.magia.length){p.cards.push(G.magia.pop());log(p.name+' (IA) aproveitou os Ventos da Sorte e ganhou uma carta de Magia.');}
       renderAll();
     }else{
       return ventosModal(G.players[G.turn]);
@@ -2543,8 +2561,8 @@ function ventosModal(p){
     '<div class="pickCard" id="vw"><div style="width:110px;height:110px;border-radius:14px;background:'+EVT.ventos.c+
       ';display:grid;place-items:center;color:#fff;font:600 30px/1 \'Google Sans\',Roboto,sans-serif">+2</div>'+
       '<span class="cap">Avançar<br>2 casas</span></div>'+
-    '<div class="pickCard'+(G.treasure.length?'':' dis')+'" id="vt">'+treasureCardBack(90)+
-      '<span class="cap">Comprar<br>1 Tesouro</span></div>'+
+    '<div class="pickCard'+(G.magia.length?'':' dis')+'" id="vt">'+treasureCardBack(90)+
+      '<span class="cap">Ganhar<br>1 Magia</span></div>'+
     '</div></div>');
   $('vw').onclick=()=>{
     closeModal();
@@ -2553,12 +2571,12 @@ function ventosModal(p){
     log(p.name+' seguiu os Ventos da Sorte e ganhou 2 casas.');
     renderAll();highlight();
   };
-  if(G.treasure.length)$('vt').onclick=()=>{
-    const c=G.treasure.pop();p.cards.push(c);SFX.play('treasure');
-    log(p.name+' comprou '+TRE[c].n+' com os Ventos da Sorte.');
-    openModal('<h2>Carta de tesouro</h2><div class="body" style="text-align:center">'+
+  if(G.magia.length)$('vt').onclick=()=>{
+    const c=G.magia.pop();p.cards.push(c);SFX.play('treasure');
+    log(p.name+' ganhou '+MAGIA[c].n+' com os Ventos da Sorte.');
+    openModal('<h2>Carta de Magia</h2><div class="body" style="text-align:center">'+
       '<div class="pickCard flip" style="margin:0 auto;pointer-events:none">'+treasureCardFront(c,90)+
-      '<span class="cap">'+TRE[c].n+'</span></div><p class="lead" style="margin-top:16px">'+TRE[c].d+'</p></div>');
+      '<span class="cap">'+MAGIA[c].n+'</span></div><p class="lead" style="margin-top:16px">'+MAGIA[c].d+'</p></div>');
     renderAll();
     setTimeout(endTurn,1800);
   };
@@ -2566,8 +2584,8 @@ function ventosModal(p){
 function endRound(){
   G.round++;
   G.ventosUsed=false;
-  if(G.round>20)return gameOver('seasons');
-  const s=Math.floor((G.round-1)/5);
+  if(G.round>24)return gameOver();
+  const s=Math.floor((G.round-1)/6);
   if(s!==G.season){G.season=s;buildDeck(s);log('Chegou o '+SEASONS[s].n+'.');seasonFanfare=true;}
   G.turn=(G.turn+1)%G.players.length;
   revealEvent();
@@ -2577,7 +2595,7 @@ function endRound(){
 /* placa grande no centro do tabuleiro: desce do alto, some as rotas e espera um toque para sair */
 let revealBusy=false,seasonFanfare=false;
 function showEventReveal(key,done){
-  const art=EVT_MODAL[key];
+  const art=EVT_CARD[key];
   const box=$('evtReveal'),img=$('evtRevealArt'),artbox=$('artbox');
   if(!art||!box||!img){if(done)done();return;}
   revealBusy=true;
@@ -2585,6 +2603,9 @@ function showEventReveal(key,done){
   if(seasonFanfare){seasonFanfare=false;SFX.play('season');setTimeout(()=>SFX.event(key),660);}
   else SFX.event(key);
   img.src=art;img.alt=EVT[key]?EVT[key].n:'';
+  $('evtRevealSeason').textContent=SEASONS[G.season].n+' · Evento';
+  $('evtRevealName').textContent=EVT[key]?EVT[key].n:'';
+  $('evtRevealDesc').textContent=EVT[key]?EVT[key].d:'';
   artbox.classList.add('reveal');
   box.classList.remove('leaving');
   requestAnimationFrame(()=>box.classList.add('on'));
@@ -2617,41 +2638,42 @@ function revealEvent(first){
   $('dragonShape')&&$('dragonShape').classList.toggle('on',G.dragon);
   if(c==='chuva')addWater(1);
   if(c==='tempestade')addWater(2);
+  if(c==='nevasca')addWater(2);
   if(c==='sol'){for(const id in G.water){G.water[id]=0;G.broken[id]=false;
     (G.vill[id]||[]).forEach(t=>t.revealed=false);}log('Sol: telhados consertados, fichas viradas para baixo.');}
   if(G.dragon&&!first)dragonPenalty();
   if(!first)log('Evento revelado: '+EVT[c].n+'.');
 }
-function addWater(n){
-  for(const id in G.water){
-    G.water[id]=Math.min(3,G.water[id]+n);
-    if(G.water[id]>=3&&!G.broken[id]){G.broken[id]=true;
-      const o=G.players.find(p=>p.home===id);
-      if(o)log('Teto de '+o.name+' desabou: fichas reveladas.');}
-  }
+function addWaterTo(id,n){
+  if(!(id in G.water))return;
+  G.water[id]=Math.min(3,G.water[id]+n);
+  if(G.water[id]>=3&&!G.broken[id]){G.broken[id]=true;
+    const o=G.players.find(p=>p.home===id);
+    if(o)log('Teto de '+o.name+' desabou: fichas reveladas.');}
 }
+function addWater(n){for(const id in G.water)addWaterTo(id,n);}
 function dragonPenalty(){
   G.players.forEach(p=>{
     if(!N[p.pos].nest)return;
     if(p.carried.length){p.carried.forEach(t=>G.pool.push(t.type));p.carried=[];shuffle(G.pool);
-      log(p.name+' largou a ficha no ninho e recuou 1 casa.');moveBack(p,1);}
-    else{log(p.name+' estava no ninho sem ficha e recuou 3 casas.');moveBack(p,3);}
+      log(p.name+' foi pego no flagra com uma ficha e recuou 3 casas.');moveBack(p,3);}
+    else{log(p.name+' estava no ninho sem ficha e recuou 1 casa.');moveBack(p,1);}
   });
 }
 
 /* ============================================================
    10. FIM DE JOGO
    ============================================================ */
-function gameOver(reason,winner){
+function gameOver(){
   closeModal();SFX.play('victory');
   const rank=[...G.players].sort((a,b)=>eggsOf(b)-eggsOf(a));
-  $('endReason').textContent = reason==='eggs'
-    ? (winner.name+' chegou a 8 Ovos de Dragão e venceu na hora. Vida longa aos Dragões.')
-    : 'As estações chegaram ao fim (20 rodadas). Vida longa aos Dragões.';
+  const top=rank.length?eggsOf(rank[0]):0;
+  $('endReason').textContent='As estações chegaram ao fim (24 rodadas). '+
+    (rank.filter(p=>eggsOf(p)===top).length>1?'Vitória compartilhada. ':'')+'Vida longa aos Dragões.';
   $('rankList').innerHTML=rank.map((p,i)=>
-    '<div class="rk'+(i===0?' win':'')+'"><span class="pos">'+(i+1)+'</span>'+
+    '<div class="rk'+(eggsOf(p)===top?' win':'')+'"><span class="pos">'+(i+1)+'</span>'+
     '<span class="av" style="background:'+p.color+'">'+p.name[0]+'</span>'+
-    '<span class="nm">'+p.name+(i===0?' · vence':'')+'</span>'+
+    '<span class="nm">'+p.name+(eggsOf(p)===top?' · vence':'')+'</span>'+
     '<span class="eg">'+eggsOf(p)+' ovos</span></div>').join('');
   $('endscr').classList.remove('hide');
 }
