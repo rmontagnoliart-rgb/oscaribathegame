@@ -566,7 +566,7 @@
               <stop offset="100%" stop-color="#000" stop-opacity="0"/>
             </radialGradient>
           </defs>
-          <g id="gEdges"></g><g id="gNodes"></g><g id="gVill"></g><g id="gPawns"></g>
+          <g id="gDragon"></g><g id="gEdges"></g><g id="gNodes"></g><g id="gVill"></g><g id="gPawns"></g>
         </svg>
         <div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
         <div class="evtReveal" id="evtReveal">
@@ -1107,7 +1107,7 @@ function start(){
 /* ============================================================
    5. DESENHO DO TABULEIRO
    ============================================================ */
-const gE=document.getElementById('gEdges'),gN=document.getElementById('gNodes'),
+const gD=document.getElementById('gDragon'),gE=document.getElementById('gEdges'),gN=document.getElementById('gNodes'),
       gV=document.getElementById('gVill'),gP=document.getElementById('gPawns');
 const SVG='http://www.w3.org/2000/svg';
 function el(t,at){const e=document.createElementNS(SVG,t);for(const k in at)e.setAttribute(k,at[k]);return e;}
@@ -1392,14 +1392,16 @@ function drawBoard(){
       g.appendChild(el('polygon',{points:hexPts(0,0,58*S),class:'nestring',id:'nestring'}));
       g.appendChild(el('polygon',{points:hexPts(0,0,44*S),class:'nd nest',id:'nd_NEST'}));
       g.appendChild(el('polygon',{points:hexPts(0,0,52*S),class:'halo',id:'ha_NEST'}));
-      // dragão em jogo: emblema bordado sobre o ninho
+      // dragão em jogo: emblema bordado sobre o ninho — mora em gDragon (abaixo de gEdges), não
+      // aqui em gNodes, pra ficar por cima da arte do tabuleiro mas por baixo das linhas de rota
+      // (assim o jogador vê que o grafo continua o mesmo mesmo com o dragão no ninho)
       const dg=el('g',{class:'dragonshape',id:'dragonShape'});
       const dgImg=el('image',{x:-150,y:-150,width:300,height:300,'clip-path':'url(#dragonClip)',preserveAspectRatio:'xMidYMid slice'});
       dgImg.setAttribute('href',DRAGON_IMG);
       dgImg.setAttributeNS('http://www.w3.org/1999/xlink','href',DRAGON_IMG);
       dg.appendChild(dgImg);
       dg.appendChild(el('circle',{cx:0,cy:0,r:150,fill:'none',stroke:'#5c1a12','stroke-width':6}));
-      g.appendChild(dg);
+      gD.appendChild(dg);
     }else{
       g.appendChild(el('circle',{cx:n.x,cy:n.y,r:7*S,class:'nd',id:'nd_'+id}));
       g.appendChild(el('circle',{cx:n.x,cy:n.y,r:12*S,class:'halo',id:'ha_'+id}));
