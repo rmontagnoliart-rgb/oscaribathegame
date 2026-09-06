@@ -216,6 +216,37 @@ As magias com alvo são resolvidas no celular, tocando nas próprias cartas:
 O tipo de uma ficha só viaja pela rede quando ela já é pública ou pertence a quem
 está pedindo — o celular não recebe dado que não pode ver.
 
+### Roubo em vilarejo (pelo celular)
+
+Pisar no vilarejo de outro jogador **sempre** dá um retorno — antes, quando o dono
+estava em casa, o jogo seguia em silêncio e parecia bug. Agora `villageEncounter()`
+trata os três casos:
+
+- **Dono presente**: avisa na mesa que um vilarejo com o dono dentro não pode ser
+  assaltado (manual, seção 8) e segue o movimento.
+- **Jogador com celular**: a mesa manda `steal` para aquele celular e fica esperando,
+  mostrando só *"fulano está escolhendo no celular"*. A moldura do vilarejo vira a tela
+  do roubo: fichas de costas, o jogador toca em uma (ou em *Não roubar e seguir*), e só
+  ele vê o que era. A resposta volta em `stealPick`/`stealSkip`.
+- **Bot ou sem celular**: cai no modal antigo da tablet, como antes.
+
+Na versão pelo celular o ovo roubado entra na mão como `revealed:false` — a mesa vê
+que alguém carrega alguma coisa, não o quê. Esterco e Armadilha resolvem igual, mas o
+log da mesa é neutro ("vasculhou e saiu sem levar nada"); a armadilha, por ter efeito
+público, continua aparecendo.
+
+### Partida pausada por desconexão
+
+Um celular fora do ar é uma mão que ninguém pode jogar. Quando isso acontece com a
+partida já rolando, `netPresenceChanged()` liga `G.paused`, cobre a mesa com o aviso
+`#netPause` e congela tudo: bot não joga (`autoPlayTurn` e o disparo em `startTurn`
+checam a flag) e nada vindo de celular é aceito.
+
+O jogador volta abrindo a mesma página e entrando **com o mesmo nome** — a reconexão
+por assento já existia, e ao voltar a pausa sai sozinha e o turno retoma de onde parou.
+Se ele não voltar, **Continuar com bot no lugar** converte o assento em bot
+(`Net.makeBot`) para a partida não morrer ali.
+
 ### Artes das cartas
 
 As 8 cartas (4 de Magia, 4 de Ficha) vêm dos PDFs de impressão, rasterizados a 640px

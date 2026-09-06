@@ -587,6 +587,25 @@
   .ph-foot{padding:26px 16px calc(env(safe-area-inset-bottom,0px) + 26px);font-size:11.5px;color:var(--text3);
     text-align:center;line-height:1.6}
 
+  /* ---------- partida pausada por desconexão ---------- */
+  /* Fica fora de #stage e acima de tudo na tablet: a partida não anda enquanto
+     um jogador de celular estiver fora. */
+  #netPause{display:none;position:fixed;inset:0;z-index:1600;align-items:center;justify-content:center;
+    padding:24px;background:rgba(32,33,36,.72)}
+  #netPause.on{display:flex}
+  .np-card{width:520px;max-width:100%;background:var(--surface);border-radius:20px;padding:32px;
+    box-shadow:var(--sh2);text-align:center}
+  .np-card h2{font-size:24px;font-weight:400;letter-spacing:-.2px}
+  .np-card p{font-size:14px;color:var(--text2);margin-top:10px;line-height:1.55}
+  .np-who{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:22px 0 4px}
+  .np-who .who{display:flex;align-items:center;gap:9px;padding:8px 15px 8px 8px;
+    border:1px solid var(--line);border-radius:999px}
+  .np-who .av{width:30px;height:30px;border-radius:50%;color:#fff;display:grid;place-items:center;
+    font:500 13px/1 "Google Sans",Roboto,sans-serif}
+  .np-who .nm{font-size:14px;font-weight:500}
+  .np-dots{display:inline-block;min-width:18px;text-align:left}
+  .np-acts{margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
   /* ---------- lista de vilarejos + visão do vilarejo de outro jogador ---------- */
   .ph-vills{display:flex;flex-direction:column;gap:8px}
   .ph-vill{display:flex;align-items:center;gap:11px;width:100%;text-align:left;cursor:pointer;
@@ -831,6 +850,19 @@
   </div>
 
 </div></div>
+
+<!-- partida pausada: alguém do celular caiu -->
+<div id="netPause">
+  <div class="np-card">
+    <h2>Partida pausada</h2>
+    <p id="npText">Um jogador perdeu a conexão.</p>
+    <div class="np-who" id="npWho"></div>
+    <p>No celular, é só abrir a mesma página e entrar de novo <b>com o mesmo nome</b> para voltar ao mesmo lugar. A partida continua sozinha assim que ele voltar<span class="np-dots" id="npDots"></span></p>
+    <div class="np-acts">
+      <button class="btn ghost" id="npBot">Continuar com bot no lugar</button>
+    </div>
+  </div>
+</div>
 
 <!-- avisos "Fulano entrou na sala": ficam acima de tudo, inclusive do lobby -->
 <div id="mpToast"></div>
@@ -1344,7 +1376,8 @@ const EVT_CARD={sol:'assets/evt/evt-sol.webp',chuva:'assets/evt/evt-chuva.webp',
 
 const G={players:[],turn:0,mover:0,turnsDone:0,round:1,season:0,
   event:null,dragon:false,pool:[],magia:[],deck:[],
-  vill:{},water:{},broken:{},steps:0,prev:null,visited:[],phase:'setup',pinote:false,ventosUsed:false};
+  vill:{},water:{},broken:{},steps:0,prev:null,visited:[],phase:'setup',pinote:false,ventosUsed:false,
+  pendingSteal:null,paused:false};
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
 /* distribuição de fichas do Monte do Dragão e de Magia por número de jogadores (manual, seção 2) */
@@ -2082,7 +2115,7 @@ function startTurn(){
   openTurnModal(p);
   // bot: joga sozinho, sem esperar um toque no tablet. Reaproveita a mesma IA
   // do botão "Simular jogada" — só dispara automaticamente quando é a vez dele.
-  if(p.bot)setTimeout(()=>{if(G.turn===p.i&&G.phase==='roll')autoPlayTurn();},700);
+  if(p.bot)setTimeout(()=>{if(!G.paused&&G.turn===p.i&&G.phase==='roll')autoPlayTurn();},700);
 }
 function openTurnModal(p){
   SFX.play('turn');
@@ -2211,10 +2244,8 @@ function arrive(id){
 
   if(id!==p.home&&N[id].type==='village'){
     const owner=G.players.find(x=>x.home===id);
-    if(!(owner&&owner.pos===id)){
-      G.phase='idle';renderAll();
-      return invadeChoiceModal(p,id,owner);
-    }
+    G.phase='idle';renderAll();
+    return villageEncounter(p,id,owner);
   }
   if(id!==p.home){
     const others=G.players.filter(x=>x.i!==p.i&&x.pos===id);
@@ -2458,6 +2489,65 @@ function applyDragonOutcome(p,r){
 }
 
 /* ---------- roubo em vilarejo: dispara ao passar ou ao parar ---------- */
+/* Pisar no vilarejo de outro jogador SEMPRE dá um retorno: antes, quando o dono
+   estava em casa (manual, secao 8: vilarejo com o dono presente nao pode ser
+   assaltado) o jogo simplesmente seguia em silencio e parecia bug. */
+function villageEncounter(p,vid,owner){
+  const nome=owner?owner.name:"?";
+  if(owner&&owner.pos===vid){
+    log(p.name+" passou pelo vilarejo de "+nome+", mas o dono estava em casa.");
+    openModal("<h2>Vilarejo de "+nome+"</h2><p class=\"lead\">"+nome+" está em casa defendendo o vilarejo — um vilarejo com o dono presente não pode ser assaltado.</p>"+
+      acts([{id:"ok",t:"Seguir"}]));
+    $("ok").onclick=()=>{closeModal();continueMove();};
+    return;
+  }
+  // com celular na mesa, a escolha da ficha acontece na mao do jogador
+  if(Net&&Net.isHost()&&Net.hasPhone(p.i)&&!p.cursed&&canCarryMore(p)&&G.vill[vid].length){
+    return stealOnPhone(p,vid,owner);
+  }
+  invadeChoiceModal(p,vid,owner);
+}
+
+/* O tabuleiro fica esperando sem mostrar nada: quem escolhe (e quem ve a ficha)
+   e o dono da mao, no proprio celular. */
+function stealOnPhone(p,vid,owner){
+  const nome=owner?owner.name:"?";
+  G.pendingSteal={seat:p.i,vill:vid};
+  const ok=Net.sendTo(p.i,{t:"steal",vill:vid,owner:nome,
+    cards:(G.vill[vid]||[]).map(t=>({revealed:!!t.revealed||!!G.broken[vid],
+      type:(t.revealed||G.broken[vid])?t.type:null}))});
+  if(!ok){G.pendingSteal=null;return invadeChoiceModal(p,vid,owner);}
+  log(p.name+" entrou no vilarejo de "+nome+" e está decidindo no celular.");
+  SFX.play("cardFlip");
+  openModal("<h2>Vilarejo de "+nome+"</h2><p class=\"lead\">"+p.name+" está escolhendo no celular se rouba uma ficha guardada aqui — e qual. A mesa não vê a escolha.</p>");
+}
+function stealPhoneDone(){G.pendingSteal=null;closeModal();}
+
+/* mesma resolucao do roubo, mas sem revelar o tipo da ficha para a mesa */
+function resolveStealPrivate(p,vid,idx){
+  const t=(G.vill[vid]||[])[idx];
+  if(!t)return null;
+  const owner=G.players.find(x=>x.home===vid);
+  const nome=owner?owner.name:"?";
+  if(t.type==="ovo"){
+    G.vill[vid].splice(idx,1);
+    p.carried.push({type:"ovo",revealed:false});   // segue oculta para a mesa
+    log(p.name+" roubou uma ficha do vilarejo de "+nome+".");
+    SFX.play("stealOk");
+    stealPhoneDone();renderAll();
+    afterAction("Roubo","A ficha roubada está na mão de "+p.name+".");
+  }else if(t.type==="esterco"){
+    log(p.name+" vasculhou o vilarejo de "+nome+" e saiu sem levar nada.");
+    SFX.play("dung");
+    stealPhoneDone();renderAll();
+    afterAction("Nada levado","A ficha continua guardada, oculta, no vilarejo.");
+  }else{
+    G.vill[vid].splice(idx,1);
+    stealPhoneDone();renderAll();
+    applyTrap(p,"Armadilha contra ladrão");
+  }
+  return t.type;
+}
 function invadeChoiceModal(p,vid,owner){
   const full=!canCarryMore(p);
   const has=G.vill[vid].length>0&&!full&&!p.cursed;
@@ -2616,6 +2706,7 @@ function autoNote(h,t){prompt(h,t,null,null);setState(t);}
 
 async function autoPlayTurn(){
   if(revealBusy)return;
+  if(G.paused)return;              // partida congelada: bot não joga
   if(G.mover!==G.turn)return;                 // não interfere durante um pinote alheio
   if(G.phase!=='roll'&&G.phase!=='move')return;
   // o turno abre com o modal do dado; a IA simplesmente o dispensa e assume a jogada
@@ -3108,6 +3199,7 @@ var Net=(function(){
         try{c.send({t:'joined',seat:back.seat,name:back.name,room});}catch(_){}
         toast(back.name,COLORS[back.seat],'reconectou.');
         pushAll();notifySeats();
+        if(typeof netPresenceChanged==="function")netPresenceChanged();
         return;
       }
       if(seats.length>=MP_MAX){
@@ -3130,7 +3222,7 @@ var Net=(function(){
 
     if(d.t==='useMagia'){
       const s=seatOf(c);
-      if(!s||!started||G.phase==='setup')return;
+      if(!s||!started||G.phase==='setup'||G.paused)return;
       useTreasure(s.seat,+d.k);
       return;
     }
@@ -3161,6 +3253,29 @@ var Net=(function(){
       return;
     }
 
+    /* roubo resolvido no celular: so vale para quem a mesa realmente convidou */
+    if(d.t==='stealPick'||d.t==='stealSkip'){
+      const st=seatOf(c);
+      const ps=G.pendingSteal;
+      if(!st||!started||!ps||ps.seat!==st.seat)return;
+      const p=G.players[st.seat];
+      const owner=G.players.find(x=>x.home===ps.vill);
+      if(d.t==='stealSkip'){
+        G.pendingSteal=null;closeModal();
+        log(p.name+' passou pelo vilarejo de '+(owner?owner.name:'?')+' sem roubar.');
+        try{c.send({t:'stealResult',skipped:true});}catch(_){}
+        renderAll();continueMove();
+        return;
+      }
+      const idx=+d.idx;
+      const t=(G.vill[ps.vill]||[])[idx];
+      if(!t)return;
+      const vid=ps.vill;
+      const type=resolveStealPrivate(p,vid,idx);
+      try{c.send({t:'stealResult',vill:vid,idx,type});}catch(_){}
+      return;
+    }
+
     /* Alagar: o alvo tambem e escolhido no celular */
     if(d.t==='alagarPick'){
       const s=seatOf(c);
@@ -3185,7 +3300,12 @@ var Net=(function(){
   function hostDrop(c){
     const s=seatOf(c);
     if(!s)return;
-    if(started){s.c=null;notifySeats();return;}   // guarda o assento para a volta
+    if(started){
+      // com a partida rolando, a queda de um celular pausa tudo ate ele voltar
+      s.c=null;notifySeats();
+      if(typeof netPresenceChanged==="function")netPresenceChanged();
+      return;
+    }
     seats=seats.filter(x=>x.c!==c);
     seats.forEach((x,i)=>{x.seat=i;});            // reordena enquanto ninguém começou
     broadcastLobby();notifySeats();
@@ -3377,6 +3497,20 @@ var Net=(function(){
     onSeats:f=>{onSeats=f;},
     started:()=>started,
     openTable,probe,join,send,leave,pushAll,toast,addBot,removeBot,closeTable,
+    // um assento so tem celular se houver conexao viva (bot nunca tem)
+    hasPhone(seat){const x=seats.find(y=>y.seat===seat);return !!(x&&x.c);},
+    // assento abandonado vira bot: o lugar continua existindo, mas sem esperar celular
+    makeBot(seat){
+      const x=seats.find(y=>y.seat===seat);
+      if(!x)return;
+      x.bot=true;x.c=null;
+      notifySeats();
+    },
+    sendTo(seat,msg){
+      const x=seats.find(y=>y.seat===seat);
+      if(!x||!x.c)return false;
+      try{x.c.send(msg);return true;}catch(_){return false;}
+    },
     begin(){
       started=true;
       seats.forEach(s=>{if(s.c){try{s.c.send({t:'begin',room});}catch(_){}}});
@@ -3632,6 +3766,70 @@ var MPUI=(function(){
 })();
 
 /* ============================================================
+   11d. PARTIDA PAUSADA POR DESCONEXÃO
+   ------------------------------------------------------------
+   Um celular fora do ar é uma mão que ninguém pode jogar: em vez de deixar a
+   partida seguir sem ele, a mesa congela e espera. O jogador volta entrando de
+   novo com o mesmo nome (a reconexão por assento já existia); se ele não voltar,
+   o admin pode trocá-lo por um bot para a partida não morrer ali.
+   ============================================================ */
+if($('npBot'))$('npBot').onclick=pauseSubstituteBot;
+function missingPlayers(){
+  if(!Net||!Net.isHost()||!Net.started())return [];
+  return Net.seats().filter(x=>!x.on&&!x.bot);
+}
+function netPresenceChanged(){
+  const off=missingPlayers();
+  const box=$('netPause');
+  if(!box)return;
+  if(!off.length){
+    if(G.paused){
+      G.paused=false;
+      box.classList.remove('on');
+      log('Todos voltaram — a partida continua.');
+      resumeAfterPause();
+    }
+    return;
+  }
+  G.paused=true;
+  $('npText').textContent=off.length>1
+    ? 'Estes jogadores perderam a conexão. A partida está parada até eles voltarem.'
+    : 'Este jogador perdeu a conexão. A partida está parada até ele voltar.';
+  $('npWho').innerHTML=off.map(x=>
+    '<div class="who"><span class="av" style="background:'+COLORS[x.seat]+'">'+
+    esc((x.name[0]||'?').toUpperCase())+'</span><span class="nm">'+esc(x.name)+'</span></div>').join('');
+  box.classList.add('on');
+}
+/* volta do ponto onde parou: se era a vez de um bot, ele recomeça a jogar */
+/* saida de emergencia do admin: o assento vira bot e a partida segue */
+function pauseSubstituteBot(){
+  const off=missingPlayers();
+  if(!off.length)return;
+  off.forEach(x=>{
+    const p=G.players[x.seat];
+    if(p){p.bot=true;log(p.name+' nao voltou: um bot assumiu o lugar.');}
+    Net.makeBot(x.seat);
+  });
+  G.paused=false;
+  $('netPause').classList.remove('on');
+  renderAll();
+  resumeAfterPause();
+}
+/* pontinhos de espera, so pra tela nao parecer travada */
+setInterval(()=>{
+  const el=$('npDots');
+  if(!el||!G.paused)return;
+  el.textContent='.'.repeat((el.textContent.length%3)+1);
+},600);
+
+function resumeAfterPause(){
+  const p=G.players[G.turn];
+  if(p&&p.bot&&G.phase==='roll')setTimeout(()=>{
+    if(!G.paused&&G.turn===p.i&&G.phase==='roll')autoPlayTurn();
+  },500);
+}
+
+/* ============================================================
    11c. A MÃO NO CELULAR (tela #phone)
    ============================================================ */
 var Phone=(function(){
@@ -3639,6 +3837,8 @@ var Phone=(function(){
   /* visao de vilarejo: qual esta aberto, o que ja foi espiado nele e qual
      interacao esta pendente ('visao' | 'alagar' | null) */
   let vOpen=null,vPeek={},pending=null,picks=[];
+  /* roubo em andamento: a mesa convidou este celular a escolher uma ficha */
+  let steal=null;
 
   function enter(d){
     document.body.classList.add('phone');
@@ -3664,6 +3864,18 @@ var Phone=(function(){
     }else if(d.t==='over'){
       $('phTurn').className='ph-turn';
       $('phTurn').textContent='Fim de jogo — a contagem final está na tablet.';
+    }else if(d.t==='steal'){
+      // a mesa nao manda o tipo das fichas ocultas: o celular escolhe no escuro
+      steal={vill:d.vill,owner:d.owner,cards:d.cards||[],done:null};
+      vOpen=d.vill;picks=[];pending=null;
+      document.body.classList.add('viewing');
+      drawVillage();
+    }else if(d.t==='stealResult'){
+      if(steal){
+        steal.done=d.skipped?{skipped:true}:{idx:d.idx,type:d.type};
+        drawVillage();
+        setTimeout(()=>{steal=null;closeVillage();},d.skipped?300:2600);
+      }
     }else if(d.t==='peek'){
       vPeek[d.vill]=Object.assign({},vPeek[d.vill],d.reveal||{});
       pending=null;picks=[];
@@ -3794,13 +4006,70 @@ var Phone=(function(){
     drawVillage();
   }
   function closeVillage(){
-    vOpen=null;picks=[];
+    // durante um roubo a saida so acontece pela decisão (roubar ou desistir)
+    if(steal&&!steal.done)return;
+    vOpen=null;picks=[];steal=null;
     if(pending==='visao')pending=null;
     document.body.classList.remove('viewing');
     drawVills();
   }
 
+  /* A moldura do vilarejo vira a tela do roubo: as fichas ficam de costas,
+     o jogador escolhe uma e só ele vê o que era. */
+  function drawSteal(){
+    const v=villOf(steal.vill)||{name:steal.owner,color:"#5f6368"};
+    $('phVillage').style.setProperty('--vc',v.color||'#5f6368');
+    $('phvAv').style.background=v.color||'#5f6368';
+    $('phvAv').textContent=((steal.owner||'?')[0]||'?').toUpperCase();
+    $('phvName').textContent=steal.owner||'?';
+
+    const hint=$('phvHint');
+    const done=steal.done;
+    if(!done){
+      hint.className='phv-hint act';
+      hint.innerHTML='Você entrou neste vilarejo: escolha uma ficha para roubar. '+
+        'Ninguém mais vê o que você escolher.'+
+        '<button class="ph-use" id="phvSkip" style="margin-top:12px">Não roubar e seguir</button>';
+    }else if(done.skipped){
+      hint.className='phv-hint';hint.textContent='Você seguiu sem roubar.';
+    }else if(done.type==='ovo'){
+      hint.className='phv-hint act';hint.textContent='Era um Ovo de Dragão — está na sua mão agora.';
+    }else if(done.type==='esterco'){
+      hint.className='phv-hint';hint.textContent='Era Esterco: nada acontece e a ficha continua no vilarejo.';
+    }else{
+      hint.className='phv-hint';hint.textContent='Era uma Armadilha — você fica sem jogar 1 rodada.';
+    }
+
+    const box=$('phvCards');
+    box.innerHTML=steal.cards.length?steal.cards.map((c,k)=>{
+      const type=(done&&!done.skipped&&done.idx===k)?done.type:(c.type||null);
+      const face=!!type;
+      const cls='ph-card'+((!done)?' pick':'')+((done&&done.idx===k)?' picked':'');
+      const tag=c.revealed?'<span class="ph-tag hot">Revelada</span>':'<span class="ph-tag">Oculta</span>';
+      return '<div class="'+cls+'" data-k="'+k+'">'+tag+
+        '<img src="'+(face?FICHA_IMGS[type]:FICHA_VERSO_IMG)+'" alt="">'+
+        '<div class="cap"><div class="ttl">'+esc(face?TOK[type].n:'Ficha virada')+'</div></div></div>';
+    }).join(''):'<div class="ph-none">Não há fichas guardadas aqui.</div>';
+
+    if(!done){
+      const skip=$('phvSkip');
+      if(skip)skip.onclick=()=>{
+        Net.send({t:'stealSkip'});
+        skip.disabled=true;skip.textContent="Enviando…";
+      };
+      box.querySelectorAll('.ph-card').forEach(el2=>{
+        el2.onclick=()=>{
+          const k=+el2.dataset.k;
+          Net.send({t:'stealPick',idx:k});
+          hint.className='phv-hint';hint.textContent='Abrindo a ficha…';
+          box.querySelectorAll('.ph-card').forEach(x=>{x.onclick=null;x.classList.remove('pick');});
+        };
+      });
+    }
+  }
+
   function drawVillage(){
+    if(steal&&steal.vill===vOpen)return drawSteal();
     const v=villOf(vOpen);
     if(!v){closeVillage();return;}
     $('phVillage').style.setProperty('--vc',v.color);
@@ -3856,7 +4125,10 @@ var Phone=(function(){
   }
 
   $('phLeave').onclick=()=>{Net.leave();setTimeout(()=>location.reload(),150);};
-  $('phvClose').onclick=closeVillage;
+  $('phvClose').onclick=()=>{
+    if(steal&&!steal.done)return;   // decide o roubo primeiro
+    closeVillage();
+  };
 
   return {enter,message,lobby,hand,offline,openVillage,closeVillage};
 })();
