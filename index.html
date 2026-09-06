@@ -587,6 +587,38 @@
   .ph-foot{padding:26px 16px calc(env(safe-area-inset-bottom,0px) + 26px);font-size:11.5px;color:var(--text3);
     text-align:center;line-height:1.6}
 
+  /* ---------- modal de magia (celular) ---------- */
+  /* A arte da carta vira o fundo; os alvos ficam embaixo, ao alcance do polegar. */
+  #phMagic{display:none;position:fixed;inset:0;z-index:2200;flex-direction:column;
+    justify-content:flex-end;background:#202124}
+  #phMagic.on{display:flex}
+  .phm-art{position:absolute;inset:0;background-size:cover;background-position:center top;
+    opacity:.42}
+  .phm-art::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(32,33,36,.35) 0%,rgba(32,33,36,.86) 52%,#202124 100%)}
+  .phm-body{position:relative;z-index:1;padding:26px 18px calc(env(safe-area-inset-bottom,0px) + 22px)}
+  .phm-eyebrow{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:#9aa0a6}
+  .phm-title{font:400 26px/1.2 "Google Sans",Roboto,sans-serif;color:#fff;margin-top:6px}
+  .phm-desc{font-size:13.5px;line-height:1.5;color:#dadce0;margin-top:10px}
+  .phm-ask{font-size:15px;line-height:1.45;color:#fff;font-weight:500;margin-top:16px}
+  .phm-targets{display:flex;flex-direction:column;gap:8px;margin-top:20px;
+    max-height:44vh;overflow-y:auto}
+  .phm-t{display:flex;align-items:center;gap:11px;width:100%;text-align:left;cursor:pointer;
+    appearance:none;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+    border-radius:12px;padding:12px 14px;font:inherit;color:#fff}
+  .phm-t:active{background:rgba(255,255,255,.16)}
+  .phm-t .av{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;
+    color:#fff;font:500 13px/1 "Google Sans",Roboto,sans-serif}
+  .phm-t .info{flex:1;min-width:0}
+  .phm-t .nm{font:500 14px/1.2 "Google Sans",Roboto,sans-serif}
+  .phm-t .sub{font-size:11.5px;color:#bdc1c6;margin-top:3px}
+  .phm-acts{display:flex;gap:10px;margin-top:20px}
+  .phm-btn{flex:1;appearance:none;border:0;cursor:pointer;border-radius:10px;height:48px;
+    font:500 14px/1 "Google Sans",Roboto,sans-serif;background:var(--blue);color:#fff}
+  .phm-btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.28);color:#e8eaed}
+  .phm-btn:active{filter:brightness(.92)}
+  .phm-btn[disabled]{opacity:.5;cursor:default}
+
   /* ---------- partida pausada por desconexão ---------- */
   /* Fica fora de #stage e acima de tudo na tablet: a partida não anda enquanto
      um jogador de celular estiver fora. */
@@ -984,6 +1016,19 @@
   </div>
 </div>
 
+<!-- modal de magia: arte da carta ao fundo, alvos embaixo -->
+<div id="phMagic">
+  <div class="phm-art" id="phmArt"></div>
+  <div class="phm-body">
+    <div class="phm-eyebrow" id="phmEyebrow">Carta de Magia</div>
+    <div class="phm-title" id="phmTitle">—</div>
+    <div class="phm-desc" id="phmDesc"></div>
+    <div class="phm-ask" id="phmAsk" hidden></div>
+    <div class="phm-targets" id="phmTargets"></div>
+    <div class="phm-acts" id="phmActs"></div>
+  </div>
+</div>
+
 <!-- camada da visão de um vilarejo: emoldurada na cor do dono para deixar
      explícito que a mão na tela não é a sua -->
 <div id="phVillage">
@@ -1377,7 +1422,7 @@ const EVT_CARD={sol:'assets/evt/evt-sol.webp',chuva:'assets/evt/evt-chuva.webp',
 const G={players:[],turn:0,mover:0,turnsDone:0,round:1,season:0,
   event:null,dragon:false,pool:[],magia:[],deck:[],
   vill:{},water:{},broken:{},steps:0,prev:null,visited:[],phase:'setup',pinote:false,ventosUsed:false,
-  pendingSteal:null,paused:false};
+  pendingSteal:null,paused:false,pendingDefense:null};
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
 /* distribuição de fichas do Monte do Dragão e de Magia por número de jogadores (manual, seção 2) */
@@ -1449,7 +1494,7 @@ document.getElementById('autoRoundBtn').onclick=function(){
 function start(){
   buildPool();buildMagia();buildDeck(0);
   G.players=SEATS[nP].map((v,i)=>({i,name:NAMES[i],color:COLORS[i],home:'V'+v,pos:'V'+v,
-    carried:[],cards:[],skip:false,blessed:false,cursed:false,medoShield:false}));
+    carried:[],cards:[],skip:false,blessed:false,cursed:false}));
   // no multiplayer cada assento passa a usar o nome que o jogador digitou no celular
   if(Net&&Net.isHost())Net.applyNames(G.players);
   // vilarejos = quantidade de jogadores: as vilas não usadas viram casas comuns da trilha
@@ -2488,6 +2533,49 @@ function applyDragonOutcome(p,r){
   $('ok').onclick=()=>nestChoiceModal(p);
 }
 
+/* ---------- Amedrontar: defesa reativa ----------
+   O manual (secao 12) diz "use quando outro jogador tentar roubar voce", entao a
+   carta nao e mais armada com antecedencia: no instante em que um roubo ia dar
+   certo, a mesa pergunta ao dono da carta se ele quer queimar a defesa.
+   Quem nao esta num celular (bot ou singleplayer) usa sozinho, ja que a carta so
+   tem vantagem. cb(true) = roubo impedido. */
+function askDefense(vitima,ladrao,cb){
+  const k=vitima.cards.indexOf("amedrontar");
+  if(k<0)return cb(false);
+  const gastar=()=>{
+    vitima.cards.splice(k,1);
+    log(vitima.name+" usou Amedrontar e impediu o roubo de "+ladrao.name+".");
+    SFX.play("stealFail");
+    renderAll();
+  };
+  if(!(Net&&Net.isHost()&&Net.hasPhone(vitima.i))){
+    gastar();return cb(true);
+  }
+  let feito=false;
+  const resolver=usou=>{
+    if(feito)return;
+    feito=true;
+    G.pendingDefense=null;
+    Net.sendTo(vitima.i,{t:"defendClosed"});
+    if(usou&&vitima.cards.indexOf("amedrontar")>=0){
+      const j=vitima.cards.indexOf("amedrontar");
+      vitima.cards.splice(j,1);
+      log(vitima.name+" usou Amedrontar e impediu o roubo de "+ladrao.name+".");
+      SFX.play("stealFail");renderAll();
+      return cb(true);
+    }
+    if(!usou)log(vitima.name+" preferiu guardar Amedrontar.");
+    renderAll();
+    cb(false);
+  };
+  G.pendingDefense={seat:vitima.i,resolve:resolver};
+  Net.sendTo(vitima.i,{t:"defend",from:ladrao.name});
+  openModal('<h2>Defesa</h2><p class="lead">'+vitima.name+
+    ' tem uma carta de defesa e está decidindo no celular se usa contra '+ladrao.name+'.</p>');
+  // se ninguem responder, o jogo nao pode ficar preso
+  setTimeout(()=>{if(!feito){log(vitima.name+" não respondeu a tempo.");resolver(false);}},25000);
+}
+
 /* ---------- roubo em vilarejo: dispara ao passar ou ao parar ---------- */
 /* Pisar no vilarejo de outro jogador SEMPRE dá um retorno: antes, quando o dono
    estava em casa (manual, secao 8: vilarejo com o dono presente nao pode ser
@@ -2631,13 +2719,17 @@ function bumpModal(p,alvo){
       $('go').disabled=true;
       setTimeout(()=>{
         if(a>b){
-          if(alvo.medoShield){
-            alvo.medoShield=false;
-            log(alvo.name+' tinha Amedrontar armado e ele impediu o roubo.');SFX.play('stealFail');
-            closeModal();return afterAction('Roubo impedido','Amedrontar (armado com antecedência) cancelou a ação.');}
-          const t=alvo.carried.pop();p.carried.push(t);
-          log(p.name+' venceu a briga ('+a+'×'+b+') e roubou uma ficha.');SFX.play('stealOk');
-          closeModal();afterAction('Roubo bem-sucedido','A ficha mudou de mãos.');
+          closeModal();
+          // antes de levar a ficha, o alvo tem direito de reagir com Amedrontar
+          return askDefense(alvo,p,usou=>{
+            if(usou){
+              return afterAction('Roubo impedido','Amedrontar cancelou a ação.');
+            }
+            const t=alvo.carried.pop();p.carried.push(t);
+            log(p.name+' venceu a briga ('+a+'×'+b+') e roubou uma ficha.');SFX.play('stealOk');
+            closeModal();
+            afterAction('Roubo bem-sucedido','A ficha mudou de mãos.');
+          });
         }else{
           log(alvo.name+' escapou ('+a+'×'+b+') e deu um pinote de 2 movimentos.');SFX.play('stealFail');
           closeModal();renderAll();
@@ -2835,9 +2927,9 @@ async function autoBump(p,alvo){
   autoNote('Dados da disputa',a+' × '+b+'.');
   await sleep(1000);
   if(a>b){
-    if(alvo.medoShield){
-      alvo.medoShield=false;SFX.play('stealFail');
-      autoNote('Roubo impedido',alvo.name+' tinha Amedrontar armado.');
+    const impediu=await new Promise(res=>askDefense(alvo,p,res));
+    if(impediu){
+      autoNote('Roubo impedido',alvo.name+' usou Amedrontar.');
     }else{
       const t=alvo.carried.pop();p.carried.push(t);SFX.play('stealOk');
       autoNote('Roubo!','A IA venceu a disputa e levou a ficha.');
@@ -2875,7 +2967,7 @@ function renderTreasures(){
     box.innerHTML=G.players.map(pl=>
       '<div class="treGroup"><div class="treHead"><span class="dot" style="background:'+pl.color+'"></span>'+
       pl.name+' · '+pl.cards.length+' carta'+(pl.cards.length!==1?'s':'')+
-      (pl.medoShield?' · Amedrontar armado':'')+'</div>'+
+      (pl.cards.indexOf('amedrontar')>=0?' · tem defesa':'')+'</div>'+
       (pl.cards.length?'<div style="display:flex;gap:6px;flex-wrap:wrap;padding:6px 0 2px">'+
         pl.cards.map(()=>treasureCardBack(34)).join('')+'</div>'
         :'<div class="empty" style="padding:4px 0">Sem cartas</div>')+
@@ -2886,7 +2978,7 @@ function renderTreasures(){
   box.innerHTML=withCards.length?withCards.map(pl=>{
     const rows=pl.cards.map((c,k)=>{
       let cls='card',badge='';
-      if(c==='amedrontar'&&pl.medoShield){cls+=' shielded';badge='<span class="badge">Armada</span>';}
+      if(c==='amedrontar'){cls+=' shielded';badge='<span class="badge">Defesa</span>';}
       else{cls+=' usable';badge='<span class="badge">Usar</span>';}
       return '<div class="'+cls+'" data-p="'+pl.i+'" data-k="'+k+'">'+
         '<div class="icwrap">'+treasureArtThumb(c,36)+'</div>'+
@@ -2902,11 +2994,8 @@ function useTreasure(playerIdx,k){
   const p=G.players[playerIdx];
   const c=p&&p.cards[k];if(!c)return;
   if(c==='amedrontar'){
-    if(p.medoShield)return;
-    p.cards.splice(k,1);p.medoShield=true;
-    log(p.name+' armou Amedrontar — protegido do próximo roubo sofrido (não vale contra Armadilha).');
-    SFX.play('bless');
-    renderAll();
+    // defesa reativa: não se joga na vez, a mesa pergunta na hora do roubo
+    return;
   }else if(c==='visao'){
     p.cards.splice(k,1);
     log(p.name+' usou Visão de Dragão para espiar um vilarejo.');
@@ -3253,6 +3342,15 @@ var Net=(function(){
       return;
     }
 
+    /* resposta da defesa (Amedrontar) */
+    if(d.t==='defendUse'){
+      const st=seatOf(c);
+      const pd=G.pendingDefense;
+      if(!st||!started||!pd||pd.seat!==st.seat)return;
+      pd.resolve(!!d.use);
+      return;
+    }
+
     /* roubo resolvido no celular: so vale para quem a mesa realmente convidou */
     if(d.t==='stealPick'||d.t==='stealSkip'){
       const st=seatOf(c);
@@ -3329,7 +3427,7 @@ var Net=(function(){
       round:G.round,total:24,season:SEASONS[G.season].n,
       event:(G.event&&EVT[G.event])?EVT[G.event].n:null,
       yourTurn:G.turn===s.seat,phase:G.phase,playable:G.phase!=='setup',
-      eggs:eggsOf(p),medoShield:!!p.medoShield,blessed:!!p.blessed,cursed:!!p.cursed,
+      eggs:eggsOf(p),blessed:!!p.blessed,cursed:!!p.cursed,
       roofBroken:!!G.broken[p.home],
       cards:p.cards.slice(),
       carried:p.carried.map(t=>({type:t.type,revealed:!!t.revealed})),
@@ -3839,6 +3937,8 @@ var Phone=(function(){
   let vOpen=null,vPeek={},pending=null,picks=[];
   /* roubo em andamento: a mesa convidou este celular a escolher uma ficha */
   let steal=null;
+  /* modal de magia aberto no momento (alvo ou defesa) */
+  let magic=null;
 
   function enter(d){
     document.body.classList.add('phone');
@@ -3864,6 +3964,10 @@ var Phone=(function(){
     }else if(d.t==='over'){
       $('phTurn').className='ph-turn';
       $('phTurn').textContent='Fim de jogo — a contagem final está na tablet.';
+    }else if(d.t==='defend'){
+      openDefense(d.from);
+    }else if(d.t==='defendClosed'){
+      if(magic&&magic.defense)closeMagic();
     }else if(d.t==='steal'){
       // a mesa nao manda o tipo das fichas ocultas: o celular escolhe no escuro
       steal={vill:d.vill,owner:d.owner,cards:d.cards||[],done:null};
@@ -3911,7 +4015,7 @@ var Phone=(function(){
     $('phMeta').innerHTML=['Rodada '+d.round+'/'+d.total,d.season,
       d.event?('Evento: '+d.event):null,
       d.eggs+' ovo'+(d.eggs!==1?'s':''),
-      d.medoShield?'Amedrontar armado':null,
+      d.cards.indexOf('amedrontar')>=0?'Amedrontar de guarda':null,
       d.blessed?'Bênção do Dragão':null,
       d.cursed?'Amaldiçoado':null,
       d.roofBroken?'Teto do seu vilarejo desabou':null]
@@ -3919,30 +4023,19 @@ var Phone=(function(){
 
     const mg=$('phMagia');
     mg.innerHTML=d.cards.length?d.cards.map((c,k)=>{
-      const armed=(c==='amedrontar'&&d.medoShield);
-      const off=armed||!d.playable;
+      // Amedrontar é defesa: não se joga na vez, a mesa pergunta quando te roubam
+      const guard=(c==='amedrontar');
+      const off=guard||!d.playable;
       return '<div class="ph-card">'+
-        (armed?'<span class="ph-tag hot">Armada</span>':'')+
+        (guard?'<span class="ph-tag">Defesa</span>':'')+
         '<img src="'+MAGIA_IMGS[c]+'" alt="">'+
         '<div class="cap"><div class="ttl">'+esc(MAGIA[c].n)+'</div>'+
-        '<div class="sub">'+esc(MAGIA[c].d)+'</div>'+
+        '<div class="sub">'+esc(guard?'Fica de guarda: quando alguém tentar te roubar, a mesa pergunta se você quer usá-la.':MAGIA[c].d)+'</div>'+
         '<button class="ph-use" data-k="'+k+'" data-c="'+c+'"'+(off?' disabled':'')+'>'+
-        (armed?'Já em uso':'Usar')+'</button></div></div>';
+        (guard?'Automática':'Usar')+'</button></div></div>';
     }).join(''):'<div class="ph-none">Nenhuma carta de Magia na sua mão.</div>';
     mg.querySelectorAll('.ph-use:not([disabled])').forEach(b=>{
-      b.onclick=()=>{
-        const kind=b.dataset.c;
-        // Visao e Alagar precisam de um vilarejo: a escolha acontece aqui no
-        // celular, nas proprias cartas, em vez de num modal visivel a todos
-        if(kind==='visao'||kind==='alagar'){
-          pending=kind;picks=[];
-          drawVills();
-          $('phVills').scrollIntoView({behavior:'smooth',block:'center'});
-          return;
-        }
-        Net.send({t:'useMagia',k:+b.dataset.k});
-        b.disabled=true;b.textContent='Enviando…';
-      };
+      b.onclick=()=>openMagic(b.dataset.c);
     });
 
     const fx=$('phFichas');
@@ -3964,6 +4057,83 @@ var Phone=(function(){
 
     drawVills();
     if(vOpen)drawVillage();
+  }
+
+  /* ---------- modal de magia ----------
+     Uma tela só para as três cartas: arte ao fundo, alvos embaixo e cancelar.
+     Alagar e Visão escolhem um alvo; Amedrontar entra por fora, quando a mesa
+     avisa que alguém está tentando roubar este jogador. */
+  function closeMagic(){
+    magic=null;
+    $('phMagic').classList.remove('on');
+  }
+  function openMagic(kind){
+    if(kind==='amedrontar')return;   // defesa: só abre quando a mesa pergunta
+    if(!last)return;
+    magic={kind};
+    paintMagic({
+      kind,
+      eyebrow:'Carta de Magia',
+      title:MAGIA[kind].n,
+      desc:MAGIA[kind].d,
+      ask:kind==='visao'?'Escolha o vilarejo que você quer espiar.'
+        :'Escolha o vilarejo que vai receber +2 marcadores de água.',
+      targets:(last.vills||[]).map(v=>({
+        id:v.id,color:v.color,name:v.name+(v.mine?" (você)":""),
+        sub:v.cards.length+' ficha'+(v.cards.length!==1?'s':'')+' · '+v.water+' de água',
+        onPick(){
+          if(kind==='alagar'){
+            Net.send({t:'alagarPick',vill:v.id});
+            closeMagic();
+            return;
+          }
+          pending='visao';picks=[];
+          closeMagic();
+          openVillage(v.id);
+        }
+      })),
+      acts:[{t:'Cancelar',ghost:true,go:closeMagic}]
+    });
+  }
+  /* pergunta automática da mesa: alguém está tentando te roubar */
+  function openDefense(from){
+    magic={kind:"amedrontar",defense:true};
+    paintMagic({
+      kind:'amedrontar',
+      eyebrow:'Você está sendo roubado',
+      title:MAGIA.amedrontar.n,
+      desc:'Usar a carta impede o roubo agora. Ela é descartada depois do uso.',
+      ask:esc(from)+' está tentando te roubar. Quer usar Amedrontar?',
+      targets:[],
+      acts:[
+        {t:'Usar Amedrontar',go(){Net.send({t:'defendUse',use:true});closeMagic();}},
+        {t:'Não usar',ghost:true,go(){Net.send({t:'defendUse',use:false});closeMagic();}}
+      ]
+    });
+  }
+  function paintMagic(o){
+    $('phmArt').style.backgroundImage='url("'+MAGIA_IMGS[o.kind]+'")';
+    $('phmEyebrow').textContent=o.eyebrow;
+    $('phmTitle').textContent=o.title;
+    $('phmDesc').textContent=o.desc;
+    const ask=$('phmAsk');
+    ask.hidden=!o.ask;ask.innerHTML=o.ask||"";
+    const tb=$('phmTargets');
+    tb.innerHTML=(o.targets||[]).map((t,i)=>
+      '<button class="phm-t" data-i="'+i+'">'+
+      '<span class="av" style="background:'+t.color+'">'+esc((t.name[0]||'?').toUpperCase())+'</span>'+
+      '<span class="info"><span class="nm">'+esc(t.name)+'</span>'+
+      '<span class="sub">'+esc(t.sub||'')+'</span></span></button>').join('');
+    tb.querySelectorAll('.phm-t').forEach(b=>{
+      b.onclick=()=>{const t=o.targets[+b.dataset.i];if(t&&t.onPick)t.onPick();};
+    });
+    const ab=$('phmActs');
+    ab.innerHTML=(o.acts||[]).map((a,i)=>
+      '<button class="phm-btn'+(a.ghost?' ghost':'')+'" data-i="'+i+'">'+esc(a.t)+'</button>').join('');
+    ab.querySelectorAll('.phm-btn').forEach(b=>{
+      b.onclick=()=>{const a=o.acts[+b.dataset.i];if(a&&a.go)a.go();};
+    });
+    $('phMagic').classList.add('on');
   }
 
   /* ---------- vilarejos ---------- */
@@ -4130,6 +4300,6 @@ var Phone=(function(){
     closeVillage();
   };
 
-  return {enter,message,lobby,hand,offline,openVillage,closeVillage};
+  return {enter,message,lobby,hand,offline,openVillage,closeVillage,openMagic,openDefense};
 })();
 </script>

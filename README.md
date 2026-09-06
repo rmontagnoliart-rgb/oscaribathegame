@@ -216,6 +216,30 @@ As magias com alvo são resolvidas no celular, tocando nas próprias cartas:
 O tipo de uma ficha só viaja pela rede quando ela já é pública ou pertence a quem
 está pedindo — o celular não recebe dado que não pode ver.
 
+### Modal de magia (celular)
+
+Usar uma Magia abre uma tela própria (`#phMagic`): a arte da carta ao fundo, o nome e o
+efeito, os alvos em botões na parte de baixo (ao alcance do polegar) e cancelar.
+É a mesma tela para os três casos — só muda o conteúdo passado a `paintMagic()`.
+
+- **Alagar**: escolhe o vilarejo e manda `alagarPick`.
+- **Visão de Dragão**: escolhe o vilarejo e cai na moldura do vilarejo para tocar em 2 cartas.
+- **Amedrontar**: não abre por escolha do jogador — abre sozinha, veja abaixo.
+
+### Amedrontar virou defesa reativa
+
+O manual (seção 12) diz *"use quando outro jogador tentar roubar você"*, mas a carta era
+armada com antecedência (`medoShield`) e disparava sozinha. Agora ela fica na mão e
+`askDefense(vitima, ladrao, cb)` pergunta no instante em que o roubo ia dar certo:
+
+- Com celular: a mesa manda `defend`, o modal abre automático perguntando se quer usar
+  contra o ladrão (nomeado), e a resposta volta em `defendUse`. A mesa mostra só que o
+  jogador está decidindo. Se ninguém responder em 25s, o roubo segue.
+- Sem celular (bot ou singleplayer): usa sozinho, já que a carta só tem vantagem.
+
+Vale na Trombada (roubo entre jogadores), nos dois sentidos — ladrão humano ou bot.
+O roubo de vilarejo ainda não consulta a defesa.
+
 ### Roubo em vilarejo (pelo celular)
 
 Pisar no vilarejo de outro jogador **sempre** dá um retorno — antes, quando o dono
