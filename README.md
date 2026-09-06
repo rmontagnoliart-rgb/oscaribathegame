@@ -178,6 +178,56 @@ não há chave nem conta, e o deploy no Vercel continua sendo estático.
   e a contagem por jogador, e a ficha carregada aparece de cara para cima apenas quando
   o teto do vilarejo desabou. Um chip `📱 Sala N · conectados/total` fica na topbar.
 
+### Bots
+
+Com a mesa aberta, **+ Adicionar bot (joga sozinho)** cria um assento sem celular.
+No turno dele, `startTurn()` chama automaticamente a mesma IA do botão
+*Simular jogada* (`autoPlayTurn`) — o bot rola o dado, escolhe a rota, invade,
+rouba e resolve o ninho por conta própria. Um bot nunca usa Magia.
+Antes de começar, cada bot pode ser removido pelo ✕ no lobby.
+
+### Controle da mesa (admin)
+
+- **Fechar mesa** encerra a sala na hora: avisa os celulares conectados, destrói o
+  peer e libera o id para reabrir. Antes disso, a única saída era fechar a aba e
+  esperar o broker expirar o id sozinho — o que deixava a sala presa em *ocupada*.
+- `pagehide`/`beforeunload` fazem o mesmo automaticamente se a aba fechar ou recarregar.
+- Uma sala marcada como ocupada **continua clicável**: quem manda é a resposta real do
+  broker ao tentar abrir, não a sondagem. Assim um registro fantasma nunca bloqueia o admin.
+- O lobby resonda as salas a cada 6s, sem piscar "Procurando…" (`probeAll`).
+
+### A mão no celular
+
+Tema claro e minimalista, no mesmo sistema visual do resto do app (fundo branco,
+cinzas do Material, azul só onde é ação).
+
+Além da própria mão, o celular lista os **vilarejos** de todos os jogadores. Ao tocar
+em um, abre uma camada emoldurada na cor do dono, com o nome no topo e um botão
+**✕ Sair** — para nunca haver dúvida de qual mão está na tela. As fichas aparecem
+viradas para baixo, salvo quando o teto desabou (públicas) ou é o próprio vilarejo.
+
+As magias com alvo são resolvidas no celular, tocando nas próprias cartas:
+
+- **Visão de Dragão** → escolhe o vilarejo → toca em 2 cartas → só aquele celular vê o
+  resultado (`visaoPick` → `peek`). Antes isso abria um modal na tablet, à vista de todos.
+- **Alagar** → escolhe o vilarejo → a mesa aplica os +2 marcadores (`alagarPick`).
+- **Amedrontar** não tem alvo: segue indo direto como `useMagia`.
+
+O tipo de uma ficha só viaja pela rede quando ela já é pública ou pertence a quem
+está pedindo — o celular não recebe dado que não pode ver.
+
+### Artes das cartas
+
+As 8 cartas (4 de Magia, 4 de Ficha) vêm dos PDFs de impressão, rasterizados a 640px
+de largura e salvos em WebP q82 — ~1,7 MB no total, contra ~46 MB dos PDFs originais.
+Os arquivos mantêm os nomes de sempre em `assets/magia/` e `assets/ficha/`, então nada
+no código precisa mudar quando a arte for atualizada de novo.
+
+A arte nova é mais quadrada (proporção ~1,34) que a moldura do jogo (`CARD_RATIO`
+≈ 1,54). Não é problema: todo lugar que exibe carta usa recorte de cobertura
+(`preserveAspectRatio="xMidYMid slice"` no SVG, `object-fit:cover` no CSS), então
+sobra só um corte nas laterais decorativas — título e ilustração ficam inteiros.
+
 ### Detalhes de implementação
 
 - IDs de peer fixos: `oscariba-mesa-1` e `oscariba-mesa-2`. Abrir a mesa numa sala já
