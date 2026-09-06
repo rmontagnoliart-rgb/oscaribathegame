@@ -433,6 +433,147 @@
   #setup .bgArt.on{opacity:1}
   #setup .setup-card{position:relative;z-index:1}
 
+  /* ============================================================
+     LOBBY MULTIPLAYER (tabuleiro) + MÃO NO CELULAR
+     A capa passa a oferecer SINGLEPLAYER (fluxo antigo, tudo na tablet) e
+     MULTIPLAYER, onde a tablet abre a mesa de uma sala e cada jogador entra
+     pelo celular na mesma URL. A conexão é P2P (WebRTC/PeerJS): a tablet é a
+     dona do estado e o celular é só a mão privada do jogador.
+     ============================================================ */
+  /* capa e lobby saem do canvas 1440x900 e passam a ocupar a tela real: são as
+     duas telas que precisam funcionar em retrato, no celular do jogador */
+  #cover,#mp{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh}
+  .startBtn.alt{background:linear-gradient(180deg,#2b2318 0%,#1b150d 55%,#100c07 100%);color:#f4e4c0;
+    box-shadow:0 12px 30px rgba(0,0,0,.5),0 0 0 1px rgba(244,217,155,.55),inset 0 1px 0 rgba(255,255,255,.12)}
+  .startBtn.alt::after{border-color:rgba(244,217,155,.55)}
+  .coverCta .duo{display:flex;gap:22px}
+  @media (max-width:820px),(orientation:portrait){
+    .coverCta{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);transform:translate(-50%,0);width:86vw}
+    .coverCta .duo{flex-direction:column;gap:13px;width:100%}
+    .startBtn{width:100%;height:58px;padding:0 20px;font-size:17px}
+    .coverHint{text-align:center;font-size:11px}
+  }
+
+  #mp{z-index:35;padding:18px;overflow-y:auto}
+  #mp .bgArt{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;
+    filter:blur(7px) brightness(.42) saturate(.9);transform:scale(1.07);transition:opacity .6s var(--ease)}
+  #mp .bgArt.on{opacity:1}
+  .mp-card{position:relative;z-index:1;width:720px;max-width:92vw;border-radius:20px;padding:36px 40px;
+    background:var(--surface);box-shadow:var(--sh2)}
+  .mp-card h2{font-size:28px;font-weight:400;letter-spacing:-.2px}
+  .mp-card p.sub{font-size:14px;color:var(--text2);margin-top:8px}
+  .mp-tabs{display:flex;gap:8px;margin:22px 0 4px;background:#f1f3f4;padding:4px;border-radius:12px}
+  .mp-tab{flex:1;height:42px;border:0;border-radius:9px;background:transparent;cursor:pointer;
+    font:500 14px/1 "Google Sans",Roboto,sans-serif;color:var(--text2);transition:.15s var(--ease)}
+  .mp-tab.on{background:#fff;color:var(--blue);box-shadow:var(--sh1)}
+  .mp-field{margin-top:20px}
+  .mp-field label{display:block;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+  .mp-input{width:100%;height:52px;padding:0 16px;border:1px solid var(--line);border-radius:12px;
+    font:400 16px/1 "Google Sans",Roboto,sans-serif;color:var(--text);background:#fff;outline:none;
+    transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
+  .mp-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,115,232,.16)}
+  .roomgrid{display:flex;gap:12px;margin-top:8px}
+  .room{flex:1;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;padding:16px 18px;
+    text-align:left;transition:.15s var(--ease)}
+  .room:hover{background:#f8f9fa}
+  .room.on{border-color:var(--blue);background:#e8f0fe}
+  .room .rn{font:500 17px/1.2 "Google Sans",Roboto,sans-serif;color:var(--text)}
+  .room.on .rn{color:var(--blue)}
+  .room .rc{font-size:12.5px;color:var(--text2);margin-top:6px;display:flex;align-items:center;gap:6px}
+  .room .rc .dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex:none}
+  .room .rc.live .dot{background:var(--green)}
+  .room .rc.shut .dot{background:var(--line)}
+  .mp-actions{margin-top:28px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .mp-status{font-size:13px;color:var(--text2);min-height:18px;flex:1}
+  .mp-status.err{color:var(--red)}
+  .btn[disabled]{opacity:.45;pointer-events:none}
+  @media (max-width:820px),(orientation:portrait){
+    .mp-card{padding:24px 20px 26px;border-radius:16px;max-width:100%}
+    .mp-card h2{font-size:23px}
+    .mp-card p.sub{font-size:13px}
+    .roomgrid{flex-direction:column}
+    .mp-actions{flex-wrap:wrap;margin-top:22px}
+    .mp-status{order:-1;flex:1 0 100%}
+    .mp-actions .btn{flex:1}
+  }
+
+  /* mesa aberta: lista de quem já entrou, à espera do começo */
+  .mp-seats{margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;min-height:52px}
+  .mp-seat{display:flex;align-items:center;gap:9px;padding:8px 14px 8px 8px;border:1px solid var(--line-soft);
+    border-radius:999px;background:#fff;animation:pop .2s var(--ease)}
+  .mp-seat .av{width:30px;height:30px;border-radius:50%;color:#fff;display:grid;place-items:center;
+    font:500 13px/1 "Google Sans",Roboto,sans-serif}
+  .mp-seat .nm{font-size:14px}
+  .mp-empty{font-size:13px;color:var(--text3);align-self:center}
+
+  /* aviso "Fulano entrou na sala" sobre o tabuleiro */
+  #mpToast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 18px);transform:translate(-50%,-14px);z-index:1500;
+    display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;opacity:0;
+    transition:opacity .25s var(--ease),transform .25s var(--ease)}
+  #mpToast.on{opacity:1;transform:translate(-50%,0)}
+  #mpToast .t{display:flex;align-items:center;gap:10px;background:#202124;color:#fff;border-radius:999px;
+    padding:11px 20px 11px 11px;box-shadow:var(--sh2);font-size:14px}
+  #mpToast .t .av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+    font:500 12px/1 "Google Sans",Roboto,sans-serif}
+
+  /* chip de sala na topbar da tablet */
+  .chip.net{background:#e6f4ea;color:#137333;border-color:#ceead6}
+  .chip.net.down{background:#fce8e6;color:#c5221f;border-color:#f6cbc8}
+
+  /* ---------- a mão no celular ---------- */
+  /* Vive fora de #stage: não sofre o scale 1440x900 nem o aviso de girar a tela. */
+  body.phone{overflow:auto;touch-action:auto}
+  body.phone #stage,body.phone #rotateNotice,body.phone #fsBtn{display:none!important}
+  #phone{display:none;position:fixed;inset:0;z-index:2000;flex-direction:column;
+    background:radial-gradient(ellipse at 50% 0%,#3b2a15 0%,#140e07 68%);color:#f0dcb0;
+    overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  body.phone #phone{display:flex}
+  .ph-top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:11px;
+    padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 14px;
+    background:rgba(20,14,7,.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(244,217,155,.16)}
+  .ph-top .av{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;
+    font:500 16px/1 "Google Sans",Roboto,sans-serif;box-shadow:0 0 0 2px rgba(255,255,255,.2)}
+  .ph-top .who{flex:1;min-width:0}
+  .ph-top .nm{font:500 16px/1.2 "Google Sans",Roboto,sans-serif;color:#fff;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ph-top .rm{font-size:12px;color:#c9b184;margin-top:3px;display:flex;align-items:center;gap:6px}
+  .ph-top .rm .dot{width:7px;height:7px;border-radius:50%;background:#34a853;flex:none}
+  .ph-top .rm.off .dot{background:#ea4335}
+  .ph-leave{appearance:none;border:1px solid rgba(244,217,155,.3);background:transparent;color:#c9b184;
+    border-radius:999px;padding:8px 14px;font:500 12px/1 "Google Sans",Roboto,sans-serif;cursor:pointer}
+
+  .ph-turn{margin:14px 16px 0;border-radius:14px;padding:13px 16px;font-size:14px;
+    background:rgba(244,217,155,.08);border:1px solid rgba(244,217,155,.18);color:#e8d3a6}
+  .ph-turn.mine{background:linear-gradient(180deg,#f8e6b6,#e8cf94);border-color:#f4d99b;color:#2a1a06;
+    font-weight:600;box-shadow:0 6px 22px rgba(244,217,155,.28)}
+  .ph-meta{display:flex;gap:8px;flex-wrap:wrap;margin:12px 16px 0}
+  .ph-meta span{font-size:11.5px;letter-spacing:.5px;text-transform:uppercase;color:#c9b184;
+    border:1px solid rgba(244,217,155,.2);border-radius:999px;padding:6px 12px}
+
+  .ph-sect{margin:22px 16px 0}
+  .ph-sect > .lbl{font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:#a2906f;
+    margin-bottom:10px;display:flex;align-items:baseline;gap:8px}
+  .ph-sect > .lbl em{font-style:normal;font-size:11px;letter-spacing:.2px;text-transform:none;color:#7d6d52}
+  .ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
+  .ph-card{position:relative;border-radius:14px;overflow:hidden;background:#1b150d;
+    border:1px solid rgba(244,217,155,.2);box-shadow:0 6px 18px rgba(0,0,0,.45)}
+  .ph-card img{display:block;width:100%;aspect-ratio:405/624;object-fit:cover}
+  .ph-card .cap{padding:9px 11px 11px}
+  .ph-card .ttl{font:500 14px/1.2 "Google Sans",Roboto,sans-serif;color:#fff}
+  .ph-card .sub{font-size:11.5px;line-height:1.4;color:#a2906f;margin-top:4px}
+  .ph-use{display:block;width:100%;margin-top:9px;appearance:none;border:0;cursor:pointer;border-radius:9px;
+    height:38px;font:600 13px/1 "Google Sans",Roboto,sans-serif;color:#2a1a06;
+    background:linear-gradient(180deg,#ffffff,#ecdfc0)}
+  .ph-use[disabled]{background:rgba(244,217,155,.14);color:#7d6d52;cursor:default}
+  .ph-tag{position:absolute;top:8px;left:8px;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;
+    background:rgba(0,0,0,.66);color:#f0dcb0;border-radius:999px;padding:4px 9px;backdrop-filter:blur(3px)}
+  .ph-tag.hot{background:#ea4335;color:#fff}
+  .ph-peek{position:absolute;right:8px;top:8px;appearance:none;border:0;cursor:pointer;border-radius:999px;
+    width:32px;height:32px;background:rgba(0,0,0,.6);color:#f0dcb0;font-size:14px;line-height:1}
+  .ph-none{font-size:13px;color:#7d6d52;padding:14px 0}
+  .ph-foot{padding:26px 16px calc(env(safe-area-inset-bottom,0px) + 26px);font-size:11.5px;color:#6b5c45;
+    text-align:center;line-height:1.6}
+
   /* ---------- svg board (esculpido na arte pintada: caminho/casas fazem parte do mapa) ---------- */
   /* referência sutil dos caminhos: vetor fino, sem contorno/sombra escura */
   .edge{stroke:#FFFDE2;stroke-width:2;stroke-linecap:round;opacity:.8}
@@ -618,31 +759,6 @@
   </div>
 
 
-  <!-- ================= CAPA ================= -->
-  <div class="screen" id="cover">
-    <img class="art" id="coverArt" alt="">
-    <div class="fallback"><b>OSCARIBA</b><span>Coloque a capa em assets/board/capa.jpg</span></div>
-    <div class="veil"></div>
-    <div class="coverCta">
-      <button class="startBtn" id="btnCover">Começar</button>
-      <div class="coverHint">Toque para entrar no reino</div>
-    </div>
-  </div>
-
-  <!-- ================= SETUP ================= -->
-  <div class="screen" id="setup">
-    <img class="bgArt" id="setupBg" alt="">
-    <div class="setup-card">
-      <h2>Oscaribas</h2>
-      <p class="sub">Grafo de 31 casas · 24 de trilha, 6 vilarejos e o Ninho do Dragão. Vence quem tiver mais Ovos de Dragão guardados ao fim das 24 rodadas (6 por estação).</p>
-      <div class="counts" id="counts"></div>
-      <div class="plist" id="plist"></div>
-      <div style="margin-top:32px;display:flex;justify-content:flex-end">
-        <button class="btn" id="btnStart">Embaralhar e começar</button>
-      </div>
-    </div>
-  </div>
-
   <!-- ================= END ================= -->
   <div class="screen hide" id="endscr">
     <div class="rank">
@@ -657,6 +773,120 @@
 
 </div></div>
 
+<!-- avisos "Fulano entrou na sala": ficam acima de tudo, inclusive do lobby -->
+<div id="mpToast"></div>
+
+<!-- Capa e lobby vivem fora de #stage: precisam funcionar em retrato no celular,
+     sem o scale de 1440x900 nem o aviso de girar a tela. -->
+<!-- ================= CAPA ================= -->
+<div class="screen" id="cover">
+  <img class="art" id="coverArt" alt="">
+  <div class="fallback"><b>OSCARIBA</b><span>Coloque a capa em assets/board/capa.jpg</span></div>
+  <div class="veil"></div>
+  <div class="coverCta">
+    <div class="duo" style="display:flex;gap:22px">
+      <button class="startBtn" id="btnSingle">SINGLEPLAYER</button>
+      <button class="startBtn alt" id="btnMulti">MULTIPLAYER</button>
+    </div>
+    <div class="coverHint">Singleplayer joga tudo na tablet · Multiplayer usa o celular de cada jogador</div>
+  </div>
+</div>
+
+<!-- ================= LOBBY MULTIPLAYER ================= -->
+<div class="screen hide" id="mp">
+  <img class="bgArt" id="mpBg" alt="">
+  <div class="mp-card">
+    <h2>Multiplayer</h2>
+    <p class="sub">A tablet abre a mesa de uma sala e mostra o tabuleiro. Cada jogador abre esta mesma
+      página no celular, escolhe a sala e passa a ver só a própria mão.</p>
+
+    <div class="mp-tabs">
+      <button class="mp-tab" id="tabPlayer">Entrar como jogador</button>
+      <button class="mp-tab" id="tabTable">Abrir a mesa (tablet)</button>
+    </div>
+
+    <!-- --- jogador (celular) --- -->
+    <div id="mpPlayer">
+      <div class="mp-field">
+        <label for="mpName">Insira seu nome</label>
+        <input class="mp-input" id="mpName" maxlength="14" autocomplete="off" autocapitalize="words"
+               spellcheck="false" placeholder="Seu nome na mesa">
+      </div>
+      <div class="mp-field">
+        <label>Escolha a sala</label>
+        <div class="roomgrid" id="mpRoomsP"></div>
+      </div>
+      <div class="mp-actions">
+        <div class="mp-status" id="mpStatusP">Procurando mesas abertas…</div>
+        <button class="btn ghost" id="mpBackP">Voltar</button>
+        <button class="btn" id="mpJoin" disabled>Entrar na sala</button>
+      </div>
+    </div>
+
+    <!-- --- mesa (tablet) --- -->
+    <div id="mpTable" style="display:none">
+      <div class="mp-field">
+        <label>Abrir a mesa em qual sala</label>
+        <div class="roomgrid" id="mpRoomsT"></div>
+      </div>
+      <div class="mp-seats" id="mpSeats"><span class="mp-empty">Ninguém entrou ainda.</span></div>
+      <div class="mp-actions">
+        <div class="mp-status" id="mpStatusT">Escolha uma sala para abrir a mesa.</div>
+        <button class="btn ghost" id="mpBackT">Voltar</button>
+        <button class="btn" id="mpOpen" disabled>Abrir a mesa</button>
+        <button class="btn" id="mpBegin" style="display:none" disabled>Começar a partida</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SETUP ================= -->
+<div class="screen" id="setup">
+  <img class="bgArt" id="setupBg" alt="">
+  <div class="setup-card">
+    <h2>Oscaribas</h2>
+    <p class="sub">Grafo de 31 casas · 24 de trilha, 6 vilarejos e o Ninho do Dragão. Vence quem tiver mais Ovos de Dragão guardados ao fim das 24 rodadas (6 por estação).</p>
+    <div class="counts" id="counts"></div>
+    <div class="plist" id="plist"></div>
+    <div style="margin-top:32px;display:flex;justify-content:flex-end">
+      <button class="btn" id="btnStart">Embaralhar e começar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ================= A MÃO NO CELULAR =================
+     Fora de #stage de propósito: o celular joga em retrato e não deve receber
+     nem o scale de 1440x900 nem o aviso "gire o tablet". -->
+<div id="phone">
+  <div class="ph-top">
+    <div class="av" id="phAv">?</div>
+    <div class="who">
+      <div class="nm" id="phName">—</div>
+      <div class="rm" id="phRoom"><span class="dot"></span><span id="phRoomTxt">Conectando…</span></div>
+    </div>
+    <button class="ph-leave" id="phLeave">Sair</button>
+  </div>
+
+  <div class="ph-turn" id="phTurn">Aguardando o começo da partida…</div>
+  <div class="ph-meta" id="phMeta"></div>
+
+  <div class="ph-sect">
+    <div class="lbl">Cartas de Magia <em>· pode usar a qualquer momento</em></div>
+    <div class="ph-grid" id="phMagia"></div>
+  </div>
+
+  <div class="ph-sect">
+    <div class="lbl">Fichas do Monte do Dragão <em>· na sua mão, viradas para baixo</em></div>
+    <div class="ph-grid" id="phFichas"></div>
+  </div>
+
+  <div class="ph-foot">
+    Só você vê esta tela. A ordem das cartas é fixa — o tabuleiro na tablet é quem manda no jogo.
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
 <script>
 /* ============================================================
    1. ESCALA 1440x900 + TELA CHEIA (mobile/tablet)
@@ -668,10 +898,18 @@ function viewportSize(){
   if(window.visualViewport)return{w:visualViewport.width,h:visualViewport.height};
   return{w:innerWidth,h:innerHeight};
 }
+/* a capa e o lobby vivem fora do canvas e funcionam em retrato: só o tabuleiro
+   propriamente dito exige paisagem */
+function inPortal(){
+  const c=document.getElementById('cover'),m=document.getElementById('mp');
+  return (c&&!c.classList.contains('hide'))||(m&&!m.classList.contains('hide'));
+}
 function fit(){
+  // no celular a tela é a mão do jogador: nada de escalar o tabuleiro nem exigir paisagem
+  if(document.body.classList.contains('phone')){rotateNotice.classList.remove('show');return;}
   const{w,h}=viewportSize();
   const portrait=w<h;
-  rotateNotice.classList.toggle('show',portrait);
+  rotateNotice.classList.toggle('show',portrait&&!inPortal());
   app.style.visibility=portrait?'hidden':'visible';
   if(portrait)return;
   const s=Math.min(w/1440,h/900);
@@ -1058,24 +1296,28 @@ drawSeats();
 const COVER_SRCS=['assets/board/capa.jpg','assets/board/capa.png','assets/board/capa.webp','assets/board/capa.jpeg'];
 (function loadCover(){
   const cover=document.getElementById('cover'),art=document.getElementById('coverArt'),
-        bg=document.getElementById('setupBg');
+        bg=document.getElementById('setupBg'),bg2=document.getElementById('mpBg');
   let i=0;
   (function attempt(){
     if(i>=COVER_SRCS.length){cover.classList.add('noart');return;}
     const src=COVER_SRCS[i++],probe=new Image();
     probe.onload=()=>{art.src=src;art.classList.add('on');
-      if(bg){bg.src=src;bg.classList.add('on');}};
+      if(bg){bg.src=src;bg.classList.add('on');}
+      if(bg2){bg2.src=src;bg2.classList.add('on');}};
     probe.onerror=attempt;
     probe.src=src;
   })();
 })();
-document.getElementById('btnCover').onclick=function(){
+/* a capa agora bifurca: SINGLEPLAYER cai no setup de sempre, MULTIPLAYER abre o lobby */
+function leaveCover(after){
   const cover=document.getElementById('cover');
   if(cover.classList.contains('fading'))return;
   SFX.unlock();SFX.play('fanfare');
   cover.classList.add('fading');
-  setTimeout(()=>cover.classList.add('hide'),560);
-};
+  setTimeout(()=>{cover.classList.add('hide');if(after)after();fit();},560);
+}
+document.getElementById('btnSingle').onclick=()=>leaveCover();
+document.getElementById('btnMulti').onclick=()=>leaveCover(()=>MPUI.open());
 
 document.getElementById('btnStart').onclick=start;
 document.getElementById('autoBtn').onclick=autoPlayTurn;
@@ -1094,6 +1336,8 @@ function start(){
   buildPool();buildMagia();buildDeck(0);
   G.players=SEATS[nP].map((v,i)=>({i,name:NAMES[i],color:COLORS[i],home:'V'+v,pos:'V'+v,
     carried:[],cards:[],skip:false,blessed:false,cursed:false,medoShield:false}));
+  // no multiplayer cada assento passa a usar o nome que o jogador digitou no celular
+  if(Net&&Net.isHost())Net.applyNames(G.players);
   // vilarejos = quantidade de jogadores: as vilas não usadas viram casas comuns da trilha
   const active=new Set(SEATS[nP]);
   VILLAGE_IDS.forEach((id,i)=>{N[id].type=active.has(i)?'village':'trail';
@@ -1636,12 +1880,16 @@ function renderAll(){
   const p=G.players[G.turn];
   if(p){$('curAv').style.background=p.color;$('curAv').textContent=p.name[0];
     $('curName').textContent=p.name;}
-  $('carried').innerHTML=p&&p.carried.length?p.carried.map(t=>
-    '<div class="tok" title="'+TOK[t.type].n+(t.revealed?' · revelada':' · oculta dos outros')+'">'+
+  // no multiplayer a tablet é pública: a ficha só aparece de cara para cima se o
+  // teto do vilarejo desabou. Quem quiser espiar a própria ficha usa o celular.
+  const hideHand=Net&&Net.isHost();
+  $('carried').innerHTML=p&&p.carried.length?p.carried.map(t=>{
+    const shown=!hideHand||t.revealed;
+    return '<div class="tok" title="'+(shown?TOK[t.type].n+(t.revealed?' · revelada':''):'Ficha oculta · só o dono vê pelo celular')+'">'+
       '<div class="tokInner">'+
-        '<div class="f front">'+fichaCardFront(t.type,44)+'</div>'+
+        '<div class="f front">'+(shown?fichaCardFront(t.type,44):fichaCardBack(44))+'</div>'+
         '<div class="f back">'+fichaCardBack(44)+'</div>'+
-      '</div></div>').join('')
+      '</div></div>';}).join('')
     :'<span class="empty">Nenhuma ficha em mãos</span>';
   $('carried').querySelectorAll('.tok').forEach(el2=>
     el2.addEventListener('pointerenter',()=>SFX.play('cardHover')));
@@ -1657,6 +1905,8 @@ function renderAll(){
   updateSeasonFace();
   $('seasonBar').innerHTML=SEASONS.map((s,i)=>'<div class="sq '+(i<G.season?'done':i===G.season?'on':'')+'"></div>').join('');
   renderVillages();
+  // a mesa é a dona do estado: a cada redesenho ela reenvia a mão privada de cada celular
+  if(Net&&Net.isHost())Net.pushAll();
 }
 
 let logs=[];
@@ -2442,6 +2692,21 @@ async function autoBump(p,alvo){
    ============================================================ */
 function renderTreasures(){
   const box=$('treasures');if(!box)return;
+  // ---- multiplayer: a mão é privada. A tablet mostra só o verso e a contagem;
+  //      quem joga a carta é o dono, pelo celular. ----
+  if(Net&&Net.isHost()){
+    const lbl=box.parentElement&&box.parentElement.querySelector('.lbl');
+    if(lbl)lbl.textContent='Cartas de Magia · na mão de cada jogador (use pelo celular)';
+    box.innerHTML=G.players.map(pl=>
+      '<div class="treGroup"><div class="treHead"><span class="dot" style="background:'+pl.color+'"></span>'+
+      pl.name+' · '+pl.cards.length+' carta'+(pl.cards.length!==1?'s':'')+
+      (pl.medoShield?' · Amedrontar armado':'')+'</div>'+
+      (pl.cards.length?'<div style="display:flex;gap:6px;flex-wrap:wrap;padding:6px 0 2px">'+
+        pl.cards.map(()=>treasureCardBack(34)).join('')+'</div>'
+        :'<div class="empty" style="padding:4px 0">Sem cartas</div>')+
+      '</div>').join('');
+    return;
+  }
   const withCards=G.players.filter(pl=>pl.cards.length);
   box.innerHTML=withCards.length?withCards.map(pl=>{
     const rows=pl.cards.map((c,k)=>{
@@ -2678,5 +2943,556 @@ function gameOver(){
     '<span class="nm">'+p.name+(eggsOf(p)===top?' · vence':'')+'</span>'+
     '<span class="eg">'+eggsOf(p)+' ovos</span></div>').join('');
   $('endscr').classList.remove('hide');
+  if(Net&&Net.isHost())Net.over();
 }
+
+/* ============================================================
+   11. MULTIPLAYER — a tablet é a mesa, cada celular é uma mão
+   ------------------------------------------------------------
+   Arquitetura: não há servidor. A tablet abre uma "mesa" numa sala e continua
+   dona do estado (o objeto G segue sendo a única verdade). Cada celular abre a
+   mesma URL, escolhe a sala e conecta direto na tablet por WebRTC (PeerJS —
+   o corretor público só apresenta os dois lados; os dados trafegam P2P).
+   A mesa empurra para cada celular apenas a mão daquele jogador; o celular só
+   devolve intenções ("usar esta Magia"), nunca estado.
+   ============================================================ */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+/* nomes vêm de fora e são injetados em innerHTML por todo o app (placar, log,
+   ranking) — então são limpos já na entrada, não na hora de desenhar */
+function cleanName(s){return String(s==null?'':s).replace(/[<>&"'`\\]/g,'').replace(/\s+/g,' ').trim().slice(0,14);}
+
+const MP_ROOMS=[1,2];
+const MP_MIN=3,MP_MAX=6;
+const FICHA_IMGS={ovo:FICHA_OVO_IMG,esterco:FICHA_ESTERCO_IMG,armadilha:FICHA_ARMADILHA_IMG};
+
+var Net=(function(){
+  const PREFIX='oscariba-mesa-';
+  let role=null;          // 'host' (tablet) | 'player' (celular) | null
+  let room=null;
+  let started=false;
+  let hostPeer=null;      // mesa
+  let seats=[];           // mesa: [{c,name,seat}]
+  let myPeer=null,myReady=null;  // celular
+  let hostConn=null;      // celular -> mesa
+  let onSeats=null;       // callback do lobby da mesa
+
+  function has(){return typeof Peer!=='undefined'&&Peer;}
+
+  /* ---------- mesa (tablet) ---------- */
+  function openTable(n,cb){
+    if(!has()){cb.fail('A biblioteca de conexão não carregou. Verifique a internet e recarregue.');return;}
+    role='host';room=n;started=false;seats=[];
+    let settled=false;
+    hostPeer=new Peer(PREFIX+n,{debug:0});
+    hostPeer.on('open',()=>{if(settled)return;settled=true;cb.ok();});
+    hostPeer.on('error',e=>{
+      const t=e&&e.type;
+      if(settled)return;
+      settled=true;role=null;room=null;
+      cb.fail(t==='unavailable-id'
+        ? 'Já existe uma mesa aberta na Sala '+n+'. Escolha a outra sala.'
+        : 'Não consegui abrir a mesa ('+(t||'erro de rede')+'). Verifique a internet.');
+      try{hostPeer.destroy();}catch(_){}
+      hostPeer=null;
+    });
+    hostPeer.on('connection',c=>{
+      c.on('data',d=>hostData(c,d));
+      c.on('close',()=>hostDrop(c));
+      c.on('error',()=>hostDrop(c));
+    });
+  }
+
+  function seatOf(c){return seats.find(s=>s.c===c);}
+
+  function hostData(c,d){
+    if(!d||typeof d!=='object')return;
+
+    if(d.t==='probe'){
+      try{c.send({t:'roster',room,count:seats.length,max:MP_MAX,started,
+        names:seats.map(s=>s.name)});}catch(_){}
+      return;
+    }
+
+    if(d.t==='join'){
+      const name=cleanName(d.name)||'Jogador';
+      // partida em andamento: só volta quem caiu, e no mesmo assento
+      if(started){
+        const back=seats.find(s=>s.name.toLowerCase()===name.toLowerCase()&&!s.c);
+        if(!back){try{c.send({t:'denied',why:'A partida da Sala '+room+' já começou.'});}catch(_){}return;}
+        back.c=c;
+        try{c.send({t:'joined',seat:back.seat,name:back.name,room});}catch(_){}
+        toast(back.name,COLORS[back.seat],'reconectou.');
+        pushAll();notifySeats();
+        return;
+      }
+      if(seats.length>=MP_MAX){
+        try{c.send({t:'denied',why:'A Sala '+room+' já está cheia ('+MP_MAX+' jogadores).'});}catch(_){}
+        return;
+      }
+      if(seats.some(s=>s.name.toLowerCase()===name.toLowerCase())){
+        try{c.send({t:'denied',why:'Já tem alguém chamado "'+name+'" nesta sala. Escolha outro nome.'});}catch(_){}
+        return;
+      }
+      const seat=seats.length;
+      seats.push({c,name,seat});
+      try{c.send({t:'joined',seat,name,room});}catch(_){}
+      toast(name,COLORS[seat],'entrou na sala.');
+      log(name+' entrou na Sala '+room+'.');
+      SFX.play('cardFlip');
+      broadcastLobby();notifySeats();
+      return;
+    }
+
+    if(d.t==='useMagia'){
+      const s=seatOf(c);
+      if(!s||!started||G.phase==='setup')return;
+      useTreasure(s.seat,+d.k);
+      return;
+    }
+
+    if(d.t==='bye'){hostDrop(c);try{c.close();}catch(_){}}
+  }
+
+  function hostDrop(c){
+    const s=seatOf(c);
+    if(!s)return;
+    if(started){s.c=null;notifySeats();return;}   // guarda o assento para a volta
+    seats=seats.filter(x=>x.c!==c);
+    seats.forEach((x,i)=>{x.seat=i;});            // reordena enquanto ninguém começou
+    broadcastLobby();notifySeats();
+  }
+
+  function notifySeats(){
+    if(onSeats)onSeats(seats.map(s=>({name:s.name,seat:s.seat,on:!!s.c})));
+  }
+  function broadcastLobby(){
+    const names=seats.map(s=>s.name);
+    seats.forEach(s=>{
+      if(!s.c)return;
+      try{s.c.send({t:'lobby',room,count:seats.length,min:MP_MIN,names});}catch(_){}
+    });
+  }
+
+  function handFor(s){
+    const p=G.players[s.seat];
+    if(!p)return null;
+    return {t:'hand',room,seat:s.seat,name:p.name,color:p.color,
+      round:G.round,total:24,season:SEASONS[G.season].n,
+      event:(G.event&&EVT[G.event])?EVT[G.event].n:null,
+      yourTurn:G.turn===s.seat,phase:G.phase,playable:G.phase!=='setup',
+      eggs:eggsOf(p),medoShield:!!p.medoShield,blessed:!!p.blessed,cursed:!!p.cursed,
+      roofBroken:!!G.broken[p.home],
+      cards:p.cards.slice(),
+      carried:p.carried.map(t=>({type:t.type,revealed:!!t.revealed}))};
+  }
+
+  function pushAll(){
+    if(role!=='host'||!started)return;
+    seats.forEach(s=>{
+      if(!s.c)return;
+      const h=handFor(s);
+      if(h){try{s.c.send(h);}catch(_){}}
+    });
+    if(typeof MPUI!=='undefined'&&MPUI&&MPUI.netChip)MPUI.netChip();
+  }
+
+  function toast(name,color,what){
+    const box=$('mpToast');if(!box)return;
+    const el=document.createElement('div');el.className='t';
+    el.innerHTML='<span class="av" style="background:'+(color||'#5f6368')+'">'+
+      esc((name[0]||'?').toUpperCase())+'</span><span><b>'+esc(name)+'</b> '+what+'</span>';
+    box.appendChild(el);box.classList.add('on');
+    setTimeout(()=>{el.remove();if(!box.children.length)box.classList.remove('on');},4200);
+  }
+
+  /* ---------- celular ---------- */
+  function playerPeer(){
+    if(myReady)return myReady;
+    if(!has())return Promise.reject(new Error('A biblioteca de conexão não carregou. Verifique a internet e recarregue.'));
+    myReady=new Promise((res,rej)=>{
+      myPeer=new Peer({debug:0});
+      myPeer.on('open',()=>res(myPeer));
+      myPeer.on('error',e=>{
+        if(myPeer&&myPeer.open)return;              // erro de uma conexão, não do peer
+        myReady=null;
+        rej(new Error('Não consegui entrar na rede ('+((e&&e.type)||'erro')+').'));
+      });
+    });
+    return myReady;
+  }
+
+  /* pergunta a uma sala quantos jogadores tem; resolve null quando não há mesa */
+  function probe(n){
+    return playerPeer().then(pp=>new Promise(res=>{
+      let done=false;
+      const c=pp.connect(PREFIX+n,{reliable:true});
+      const finish=v=>{
+        if(done)return;done=true;res(v);
+        setTimeout(()=>{try{c.close();}catch(_){}},60);
+      };
+      const timer=setTimeout(()=>finish(null),4000);
+      c.on('open',()=>{try{c.send({t:'probe'});}catch(_){finish(null);}});
+      c.on('data',d=>{if(d&&d.t==='roster'){clearTimeout(timer);finish(d);}});
+      c.on('error',()=>{clearTimeout(timer);finish(null);});
+    })).catch(()=>null);
+  }
+
+  function join(n,name){
+    return playerPeer().then(pp=>new Promise((res,rej)=>{
+      let done=false;
+      const c=pp.connect(PREFIX+n,{reliable:true});
+      const timer=setTimeout(()=>{
+        if(done)return;done=true;try{c.close();}catch(_){}
+        rej(new Error('Não achei uma mesa aberta na Sala '+n+'. Peça para a tablet abrir a mesa primeiro.'));
+      },8000);
+      c.on('open',()=>{try{c.send({t:'join',name});}catch(_){}});
+      c.on('data',d=>{
+        if(!d||typeof d!=='object')return;
+        if(!done&&d.t==='joined'){
+          done=true;clearTimeout(timer);
+          role='player';room=n;hostConn=c;res(d);return;
+        }
+        if(!done&&d.t==='denied'){
+          done=true;clearTimeout(timer);try{c.close();}catch(_){}
+          rej(new Error(d.why||'A mesa recusou a entrada.'));return;
+        }
+        if(done)Phone.message(d);
+      });
+      c.on('error',()=>{
+        if(!done){done=true;clearTimeout(timer);
+          rej(new Error('Não consegui falar com a mesa da Sala '+n+'.'));}
+        else Phone.offline();
+      });
+      c.on('close',()=>{if(done)Phone.offline();});
+    }));
+  }
+
+  function send(msg){if(hostConn&&hostConn.open){try{hostConn.send(msg);}catch(_){}}}
+  function leave(){send({t:'bye'});try{if(hostConn)hostConn.close();}catch(_){}}
+
+  return {
+    isHost:()=>role==='host',
+    isPlayer:()=>role==='player',
+    room:()=>room,
+    seats:()=>seats.map(s=>({name:s.name,seat:s.seat,on:!!s.c})),
+    count:()=>seats.length,
+    onSeats:f=>{onSeats=f;},
+    started:()=>started,
+    openTable,probe,join,send,leave,pushAll,toast,
+    begin(){
+      started=true;
+      seats.forEach(s=>{if(s.c){try{s.c.send({t:'begin',room});}catch(_){}}});
+    },
+    over(){
+      if(role!=='host')return;
+      seats.forEach(s=>{if(s.c){try{s.c.send({t:'over'});}catch(_){}}});
+    },
+    applyNames(players){players.forEach((p,i)=>{const s=seats[i];if(s)p.name=s.name;});}
+  };
+})();
+
+/* ============================================================
+   11b. LOBBY (tela #mp)
+   ============================================================ */
+var MPUI=(function(){
+  let tab=null,selP=null,selT=null,info={},hosting=false;
+
+  function card(n,txt,state,sel,off){
+    return '<button class="room'+(sel===n?' on':'')+'" data-n="'+n+'"'+
+      (off?' disabled style="opacity:.45"':'')+'>'+
+      '<div class="rn">Sala '+n+'</div>'+
+      '<div class="rc'+(state?' '+state:'')+'"><span class="dot"></span>'+esc(txt)+'</div></button>';
+  }
+
+  function drawPlayerRooms(){
+    $('mpRoomsP').innerHTML=MP_ROOMS.map(n=>{
+      const r=info[n];
+      if(r===undefined)return card(n,'Procurando…','',selP);
+      if(r===null)return card(n,'Mesa fechada','shut',selP);
+      if(r.started)return card(n,'Partida em andamento','live',selP);
+      return card(n,r.count+' de '+MP_MAX+' jogadores','live',selP);
+    }).join('');
+    $('mpRoomsP').querySelectorAll('.room').forEach(b=>{
+      b.onclick=()=>{selP=+b.dataset.n;drawPlayerRooms();};
+    });
+    syncPlayer();
+  }
+
+  function drawTableRooms(){
+    $('mpRoomsT').innerHTML=MP_ROOMS.map(n=>{
+      const r=info[n];
+      if(hosting)return card(n,n===selT?'Sua mesa está aberta aqui':'—',
+        n===selT?'live':'shut',selT,n!==selT);
+      if(r===undefined)return card(n,'Procurando…','',selT);
+      if(r===null)return card(n,'Livre — pode abrir a mesa aqui','',selT);
+      return card(n,'Ocupada por outra mesa','live',selT,true);
+    }).join('');
+    $('mpRoomsT').querySelectorAll('.room:not([disabled])').forEach(b=>{
+      b.onclick=()=>{selT=+b.dataset.n;drawTableRooms();};
+    });
+    syncTable();
+  }
+
+  function syncPlayer(){
+    const name=cleanName($('mpName').value);
+    const r=selP!=null?info[selP]:undefined;
+    // com a partida em andamento a entrada continua liberada: é assim que quem
+    // caiu volta ao próprio assento, digitando o mesmo nome. Quem for novo a mesa recusa.
+    const ok=!!name&&selP!=null&&!!r&&(r.started||r.count<MP_MAX);
+    $('mpJoin').disabled=!ok;
+    const s=$('mpStatusP');
+    if(s.dataset.sticky)return;
+    s.className='mp-status';
+    if(selP==null)s.textContent='Escolha uma sala.';
+    else if(r===undefined)s.textContent='Procurando a mesa da Sala '+selP+'…';
+    else if(r===null)s.textContent='Não há mesa aberta na Sala '+selP+'. Abra a mesa na tablet primeiro.';
+    else if(r.started)s.textContent='A partida da Sala '+selP+' já começou. Se você caiu, digite o mesmo nome para voltar ao seu lugar.';
+    else if(r.count>=MP_MAX)s.textContent='A Sala '+selP+' está cheia.';
+    else if(!name)s.textContent='Digite seu nome para entrar.';
+    else s.textContent='Pronto para entrar na Sala '+selP+'.';
+  }
+
+  function syncTable(){
+    if(hosting){
+      const n=Net.count();
+      $('mpOpen').style.display='none';
+      $('mpBegin').style.display='';
+      $('mpBegin').disabled=n<MP_MIN||n>MP_MAX;
+      $('mpStatusT').className='mp-status';
+      $('mpStatusT').textContent=n<MP_MIN
+        ? 'Mesa aberta na Sala '+selT+'. Faltam '+(MP_MIN-n)+' jogador(es) — a partida precisa de '+MP_MIN+' a '+MP_MAX+'.'
+        : 'Mesa aberta na Sala '+selT+' com '+n+' jogadores. Pode começar.';
+      return;
+    }
+    $('mpOpen').disabled=selT==null;
+  }
+
+  function drawSeatsList(){
+    const list=Net.seats();
+    $('mpSeats').innerHTML=list.length?list.map(s=>
+      '<div class="mp-seat"><span class="av" style="background:'+COLORS[s.seat]+
+      ';opacity:'+(s.on?1:.4)+'">'+esc((s.name[0]||'?').toUpperCase())+'</span>'+
+      '<span class="nm">'+esc(s.name)+(s.on?'':' · desconectado')+'</span></div>').join('')
+      :'<span class="mp-empty">Ninguém entrou ainda.</span>';
+    syncTable();
+    netChip();
+  }
+
+  function scan(){
+    info={};
+    if(tab==='player')drawPlayerRooms();else drawTableRooms();
+    MP_ROOMS.forEach(n=>Net.probe(n).then(r=>{
+      info[n]=r;
+      if(tab==='player')drawPlayerRooms();else drawTableRooms();
+    }));
+  }
+
+  function setTab(t){
+    tab=t;
+    $('tabPlayer').classList.toggle('on',t==='player');
+    $('tabTable').classList.toggle('on',t==='table');
+    $('mpPlayer').style.display=t==='player'?'':'none';
+    $('mpTable').style.display=t==='table'?'':'none';
+    if(t==='player')drawPlayerRooms();else drawTableRooms();
+  }
+
+  function open(){
+    $('mp').classList.remove('hide');
+    // aba padrão pelo tamanho real do aparelho: tablet/desktop abre a mesa, celular entra
+    // como jogador (innerWidth pode vir 0 numa aba em segundo plano, daí os fallbacks)
+    const w=innerWidth||document.documentElement.clientWidth||(screen&&screen.width)||0;
+    const coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
+    setTab((w?w<900:coarse)?'player':'table');
+    scan();fit();
+  }
+
+  function back(){
+    if(hosting)return;
+    $('mp').classList.add('hide');
+    $('cover').classList.remove('hide','fading');
+    fit();
+  }
+
+  /* chip de sala na topbar, para a mesa saber que continua no ar */
+  function netChip(){
+    if(!Net.isHost())return;
+    const meta=document.querySelector('.topbar .meta');
+    if(!meta)return;
+    let c=$('mNet');
+    if(!c){c=document.createElement('div');c.className='chip net';c.id='mNet';meta.appendChild(c);}
+    const list=Net.seats(),on=list.filter(s=>s.on).length;
+    c.classList.toggle('down',on<list.length);
+    c.innerHTML='📱 Sala '+Net.room()+' · <b>'+on+'/'+list.length+'</b>';
+  }
+
+  /* --- ligações --- */
+  $('tabPlayer').onclick=()=>{if(!hosting)setTab('player');};
+  $('tabTable').onclick=()=>setTab('table');
+  $('mpName').addEventListener('input',syncPlayer);
+  $('mpBackP').onclick=back;
+  $('mpBackT').onclick=back;
+
+  $('mpJoin').onclick=function(){
+    const name=cleanName($('mpName').value);
+    if(!name||selP==null)return;
+    const s=$('mpStatusP');
+    s.dataset.sticky='1';s.className='mp-status';s.textContent='Entrando na Sala '+selP+'…';
+    this.disabled=true;
+    Net.join(selP,name).then(d=>{
+      SFX.unlock();SFX.play('treasure');
+      Phone.enter(d);
+    }).catch(e=>{
+      delete s.dataset.sticky;
+      s.className='mp-status err';s.textContent=e.message||'Não consegui entrar na sala.';
+      scan();
+    });
+  };
+
+  $('mpOpen').onclick=function(){
+    if(selT==null)return;
+    const btn=this;
+    btn.disabled=true;
+    $('mpStatusT').className='mp-status';
+    $('mpStatusT').textContent='Abrindo a mesa na Sala '+selT+'…';
+    Net.openTable(selT,{
+      ok(){
+        hosting=true;
+        Net.onSeats(drawSeatsList);
+        drawTableRooms();drawSeatsList();
+        SFX.unlock();SFX.play('fanfare');
+      },
+      fail(msg){
+        btn.disabled=false;
+        $('mpStatusT').className='mp-status err';
+        $('mpStatusT').textContent=msg;
+        scan();
+      }
+    });
+  };
+
+  $('mpBegin').onclick=function(){
+    const list=Net.seats();
+    if(list.length<MP_MIN||list.length>MP_MAX)return;
+    nP=list.length;
+    Net.begin();
+    $('mp').classList.add('hide');
+    $('setup').classList.add('hide');
+    fit();
+    start();
+    netChip();
+  };
+
+  return {open,netChip};
+})();
+
+/* ============================================================
+   11c. A MÃO NO CELULAR (tela #phone)
+   ============================================================ */
+var Phone=(function(){
+  let last=null,peeked={},lastN=-1;
+
+  function enter(d){
+    document.body.classList.add('phone');
+    document.title='Oscaribas — '+d.name;
+    $('phAv').style.background=COLORS[d.seat]||'#5f6368';
+    $('phAv').textContent=(d.name[0]||'?').toUpperCase();
+    $('phName').textContent=d.name;
+    $('phRoomTxt').textContent='Você entrou na Sala '+d.room;
+    $('phRoom').classList.remove('off');
+    $('phTurn').className='ph-turn';
+    $('phTurn').textContent='Você está na Sala '+d.room+'. Aguardando a mesa começar a partida…';
+    $('phMagia').innerHTML='<div class="ph-none">A partida ainda não começou.</div>';
+    $('phFichas').innerHTML='<div class="ph-none">A partida ainda não começou.</div>';
+    fit();
+  }
+
+  function message(d){
+    if(d.t==='hand')hand(d);
+    else if(d.t==='lobby')lobby(d);
+    else if(d.t==='begin'){
+      $('phTurn').className='ph-turn';
+      $('phTurn').textContent='A partida começou! Acompanhe o tabuleiro na tablet.';
+    }else if(d.t==='over'){
+      $('phTurn').className='ph-turn';
+      $('phTurn').textContent='Fim de jogo — a contagem final está na tablet.';
+    }
+  }
+
+  function lobby(d){
+    $('phRoomTxt').textContent='Sala '+d.room+' · conectado';
+    $('phTurn').className='ph-turn';
+    $('phTurn').textContent='Na Sala '+d.room+' com '+d.count+' jogador(es). '+
+      (d.count<d.min?('Faltam '+(d.min-d.count)+' para poder começar.'):'Aguardando a mesa começar.');
+    $('phMeta').innerHTML=(d.names||[]).map(n=>'<span>'+esc(n)+'</span>').join('');
+  }
+
+  function hand(d){
+    if(d.carried.length!==lastN){peeked={};lastN=d.carried.length;}
+    last=d;
+    $('phAv').style.background=d.color||COLORS[d.seat]||'#5f6368';
+    $('phAv').textContent=(d.name[0]||'?').toUpperCase();
+    $('phName').textContent=d.name;
+    $('phRoomTxt').textContent='Sala '+d.room+' · conectado';
+    $('phRoom').classList.remove('off');
+
+    const t=$('phTurn');
+    if(d.yourTurn){t.className='ph-turn mine';t.textContent='É a sua vez — jogue no tabuleiro.';}
+    else{t.className='ph-turn';t.textContent='Vez de outro jogador. Suas Magias podem ser usadas a qualquer momento.';}
+
+    $('phMeta').innerHTML=['Rodada '+d.round+'/'+d.total,d.season,
+      d.event?('Evento: '+d.event):null,
+      d.eggs+' ovo'+(d.eggs!==1?'s':''),
+      d.medoShield?'Amedrontar armado':null,
+      d.blessed?'Bênção do Dragão':null,
+      d.cursed?'Amaldiçoado':null,
+      d.roofBroken?'Teto do seu vilarejo desabou':null]
+      .filter(Boolean).map(s=>'<span>'+esc(s)+'</span>').join('');
+
+    const mg=$('phMagia');
+    mg.innerHTML=d.cards.length?d.cards.map((c,k)=>{
+      const armed=(c==='amedrontar'&&d.medoShield);
+      const off=armed||!d.playable;
+      return '<div class="ph-card">'+
+        (armed?'<span class="ph-tag hot">Armada</span>':'')+
+        '<img src="'+MAGIA_IMGS[c]+'" alt="">'+
+        '<div class="cap"><div class="ttl">'+esc(MAGIA[c].n)+'</div>'+
+        '<div class="sub">'+esc(MAGIA[c].d)+'</div>'+
+        '<button class="ph-use" data-k="'+k+'"'+(off?' disabled':'')+'>'+
+        (armed?'Já em uso':'Usar')+'</button></div></div>';
+    }).join(''):'<div class="ph-none">Nenhuma carta de Magia na sua mão.</div>';
+    mg.querySelectorAll('.ph-use:not([disabled])').forEach(b=>{
+      b.onclick=()=>{
+        Net.send({t:'useMagia',k:+b.dataset.k});
+        b.disabled=true;b.textContent='Enviando…';
+      };
+    });
+
+    const fx=$('phFichas');
+    fx.innerHTML=d.carried.length?d.carried.map((tk,k)=>{
+      const face=tk.revealed||!!peeked[k];
+      return '<div class="ph-card">'+
+        (tk.revealed?'<span class="ph-tag hot">Revelada a todos</span>':'<span class="ph-tag">Oculta</span>')+
+        (tk.revealed?'':'<button class="ph-peek" data-k="'+k+'">'+(peeked[k]?'🙈':'👁')+'</button>')+
+        '<img src="'+(face?FICHA_IMGS[tk.type]:FICHA_VERSO_IMG)+'" alt="">'+
+        '<div class="cap"><div class="ttl">'+esc(face?TOK[tk.type].n:'Ficha virada')+'</div>'+
+        '<div class="sub">'+(tk.revealed
+          ? 'O teto do seu vilarejo desabou — todos podem ver esta ficha.'
+          : 'Só você pode espiar. A ordem das cartas na mão é fixa.')+
+        '</div></div></div>';
+    }).join(''):'<div class="ph-none">Você não está carregando nenhuma ficha.</div>';
+    fx.querySelectorAll('.ph-peek').forEach(b=>{
+      b.onclick=()=>{const k=+b.dataset.k;peeked[k]=!peeked[k];if(last)hand(last);};
+    });
+  }
+
+  function offline(){
+    $('phRoom').classList.add('off');
+    $('phRoomTxt').textContent='Conexão com a mesa perdida — recarregue e entre de novo.';
+  }
+
+  $('phLeave').onclick=()=>{Net.leave();setTimeout(()=>location.reload(),150);};
+
+  return {enter,message,lobby,hand,offline};
+})();
 </script>

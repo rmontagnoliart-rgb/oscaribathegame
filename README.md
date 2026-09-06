@@ -81,6 +81,7 @@ relatado antes. Agora `index.html` aponta direto para `assets/audio/dice-sound.m
 | Arte da ficha no baralho de evento + na revelação   | `EVT_IMG` / `EVT_CARD`                                |
 | Lógica de turno, movimento, roubo, dragão           | funções a partir de `function startTurn()`            |
 | Layout/CSS                                           | bloco `<style>` no topo do `index.html`                 |
+| Rede, salas e mao no celular                          | secoes 11 / 11b / 11c: `Net`, `MPUI`, `Phone`            |
 
 ## Regras implementadas (agosto/2026, com ajustes de setembro/2026 ao novo manual)
 
@@ -148,6 +149,50 @@ Armadilha). A quantidade de cada uma no baralho escala com o número de jogadore
 Botão ao lado de "Simular jogada": encerra a rodada corrente na hora, contabiliza a
 rodada, troca de estação se for o caso e revela a próxima carta de evento na mesma
 ordem cronológica das regras. Não mexe na posição dos jogadores.
+
+## Multiplayer (tablet + celulares)
+
+A capa oferece **SINGLEPLAYER** (tudo na tablet, fluxo antigo) e **MULTIPLAYER**.
+
+Não há servidor: a tablet abre a *mesa* de uma sala e continua dona do estado
+(`G` segue sendo a única verdade). Cada celular abre a **mesma URL**, escolhe a
+sala e conecta direto na tablet por WebRTC (PeerJS — o corretor público só
+apresenta os dois lados; os dados trafegam P2P). Nada precisa ser configurado,
+não há chave nem conta, e o deploy no Vercel continua sendo estático.
+
+### Fluxo
+
+1. **Tablet** → MULTIPLAYER → aba *Abrir a mesa* → escolhe Sala 1 ou 2 → **Abrir a mesa**.
+2. **Celular** → mesma URL → MULTIPLAYER → aba *Entrar como jogador* → digita o nome,
+   escolhe a sala (cada sala mostra quantos jogadores já estão nela) → **Entrar na sala**.
+3. A tablet anuncia *"Fulano entrou na sala"* e lista o jogador no lobby.
+4. Com 3 a 6 jogadores, a tablet clica em **Começar a partida**. Os assentos ficam na
+   ordem de entrada e cada jogador joga com o nome que digitou.
+
+### O que cada tela mostra
+
+- **Celular**: banner com a sala e o nome, aviso de vez, as Cartas de Magia com botão
+  **Usar** (valem a qualquer momento) e as fichas do Monte do Dragão viradas para baixo,
+  com um botão 👁 que só espia localmente. A ordem das cartas na mão é fixa.
+- **Tablet**: o tabuleiro público. Em multiplayer o painel de Magia mostra só o **verso**
+  e a contagem por jogador, e a ficha carregada aparece de cara para cima apenas quando
+  o teto do vilarejo desabou. Um chip `📱 Sala N · conectados/total` fica na topbar.
+
+### Detalhes de implementação
+
+- IDs de peer fixos: `oscariba-mesa-1` e `oscariba-mesa-2`. Abrir a mesa numa sala já
+  ocupada devolve *"Já existe uma mesa aberta"* — inclusive se o ocupante for outro grupo
+  usando o mesmo site ao mesmo tempo.
+- Antes de entrar, o celular *sonda* as duas salas para mostrar a contagem; sala sem mesa
+  aparece como *Mesa fechada*.
+- Se um celular cair, o assento é guardado: basta entrar de novo **com o mesmo nome** para
+  voltar ao lugar. Quem for novo é recusado depois que a partida começa.
+- A mesa empurra para cada celular só a mão daquele jogador; o celular devolve apenas
+  intenções (`useMagia`), nunca estado.
+- Nomes são limpos na entrada (`cleanName`) porque entram em `innerHTML` no placar,
+  no log e no ranking.
+- Capa, lobby e a mão do celular vivem **fora** de `#stage`: precisam funcionar em retrato,
+  sem o scale de 1440x900 e sem o aviso "gire o tablet". O tabuleiro continua exigindo paisagem.
 
 ## Rodando localmente
 
