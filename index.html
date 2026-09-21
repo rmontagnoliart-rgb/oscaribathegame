@@ -859,8 +859,12 @@
   #netPause.on{display:flex}
   .np-card{width:520px;max-width:100%;background:var(--surface);border-radius:20px;padding:32px;
     box-shadow:var(--sh2);text-align:center}
-  .np-card h2{font-size:24px;font-weight:400;letter-spacing:-.2px}
+  /* é um aviso de erro: o selo vermelho no topo diz isso antes do texto */
+  .np-badge{width:46px;height:46px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;
+    background:#fce8e6;color:var(--red);font:700 24px/1 "Google Sans",Roboto,sans-serif}
+  .np-card h2{font-size:24px;font-weight:400;letter-spacing:-.2px;color:var(--text)}
   .np-card p{font-size:14px;color:var(--text2);margin-top:10px;line-height:1.55}
+  .np-card p.np-sub{font-size:12.5px;color:var(--text3);margin-top:14px}
   .np-who{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:22px 0 4px}
   .np-who .who{display:flex;align-items:center;gap:9px;padding:8px 15px 8px 8px;
     border:1px solid var(--line);border-radius:999px}
@@ -1123,12 +1127,14 @@
 <!-- partida pausada: alguém do celular caiu -->
 <div id="netPause">
   <div class="np-card">
-    <h2>Partida pausada</h2>
-    <p id="npText">Um jogador perdeu a conexão.</p>
+    <div class="np-badge">!</div>
+    <h2 id="npTitle">Um jogador saiu da partida</h2>
+    <p id="npText">A partida está parada.</p>
     <div class="np-who" id="npWho"></div>
-    <p>No celular, é só abrir a mesma página e entrar de novo <b>com o mesmo nome</b> para voltar ao mesmo lugar. A partida continua sozinha assim que ele voltar<span class="np-dots" id="npDots"></span></p>
+    <p class="np-sub">Se ele voltar pela mesma página <b>com o mesmo nome</b>, retoma o lugar dele e a partida continua sozinha<span class="np-dots" id="npDots"></span></p>
     <div class="np-acts">
-      <button class="btn ghost" id="npBot">Continuar com bot no lugar</button>
+      <button class="btn ghost danger" id="npCancel">Cancelar partida</button>
+      <button class="btn" id="npGo">Continuar jogando</button>
     </div>
   </div>
 </div>
@@ -1731,7 +1737,7 @@ const EVT_CARD={sol:'assets/evt/evt-sol.webp',chuva:'assets/evt/evt-chuva.webp',
 
 const G={players:[],turn:0,mover:0,turnsDone:0,round:1,season:0,
   event:null,dragon:false,pool:[],magia:[],deck:[],
-  vill:{},water:{},broken:{},villTok:{},steps:0,prev:null,visited:[],phase:'setup',pinote:false,ventosUsed:false,
+  vill:{},water:{},broken:{},villTok:{},abandoned:{},steps:0,prev:null,visited:[],phase:'setup',pinote:false,ventosUsed:false,
   pendingSteal:null,paused:false,pendingDefense:null,pendingRoll:null,pendingNest:null};
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -1815,7 +1821,7 @@ function start(){
   // vilarejos = quantidade de jogadores: as vilas não usadas viram casas comuns da trilha
   const active=new Set(SEATS[nP]);
   VILLAGE_IDS.forEach((id,i)=>{N[id].type=active.has(i)?'village':'trail';
-    G.vill[id]=[];G.water[id]=0;G.broken[id]=false;G.villTok[id]=null;});
+    G.vill[id]=[];G.water[id]=0;G.broken[id]=false;G.villTok[id]=null;G.abandoned[id]=false;});
   document.getElementById('setup').classList.add('hide');
   // antes da primeira rodada, cada jogador escolhe a ficha do próprio vilarejo
   VillagePick.open(beginMatch);
@@ -2320,8 +2326,9 @@ function renderVillages(){
 }
 
 function renderPawns(){
-  const byNode={};G.players.forEach(p=>{(byNode[p.pos]=byNode[p.pos]||[]).push(p);});
-  G.players.forEach(p=>{
+  const live=activePlayers();
+  const byNode={};live.forEach(p=>{(byNode[p.pos]=byNode[p.pos]||[]).push(p);});
+  live.forEach(p=>{
     let g=document.getElementById('pawn_'+p.i);
     if(!g){
       g=el('g',{class:'pawn',id:'pawn_'+p.i});
@@ -2459,7 +2466,7 @@ function renderAll(){
   $('mDragon').style.display=G.dragon?'flex':'none';
   const ab=$('autoBtn');if(ab)ab.disabled=!((G.phase==='roll'||G.phase==='move')&&G.mover===G.turn);
   const arb=$('autoRoundBtn');if(arb)arb.disabled=(G.phase==='setup'||G.phase==='auto');
-  $('scores').innerHTML=G.players.map(p=>
+  $('scores').innerHTML=activePlayers().map(p=>
     '<div class="score'+(p.i===G.turn?' on':'')+'"><div class="dot" style="background:'+p.color+'">'+p.name[0]+'</div>'+
     // sem contagem de ovos: o que está guardado no vilarejo fica virado para baixo
     // até o teto desabar, então o placar não pode entregar o número
@@ -2723,9 +2730,22 @@ function acts(list){return '<div class="acts">'+list.map(a=>
 /* ============================================================
    8. FLUXO DE TURNO
    ============================================================ */
+/* ---- jogadores que saíram da partida ----
+   Quem sai não é removido de G.players: o índice do array é o número do assento,
+   e tirar um elemento desalinharia tudo (peão, vilarejo, mão no celular). Em vez
+   disso o jogador fica marcado com `left` e some de toda a contagem. */
+function activePlayers(){return G.players.filter(p=>!p.left);}
+function nActive(){return activePlayers().length;}
+function nextActive(i){
+  const n=G.players.length;
+  for(let k=1;k<=n;k++){const j=(i+k)%n;if(!G.players[j].left)return j;}
+  return i;
+}
+
 function startTurn(){
   G.mover=G.turn;G.pinote=false;
   const p=G.players[G.turn];
+  if(!p||p.left)return forceNextTurn();   // saiu da partida entre um turno e outro
   if(p.skip){p.skip=false;G.phase='idle';renderAll();log(p.name+' está parado nesta rodada.');
     setState('Parado por causa de uma armadilha. Turno perdido.');
     openModal('<h2 style="text-align:center">Turno perdido</h2>'+
@@ -2895,7 +2915,8 @@ function arrive(id){
 
   if(N[id].nest){G.steps=0;G.phase='idle';renderAll();return resolveNest();}
 
-  if(id!==p.home&&N[id].type==='village'){
+  // vilarejo abandonado (o dono saiu da partida) vale como casa comum
+  if(id!==p.home&&N[id].type==='village'&&!G.abandoned[id]){
     const owner=G.players.find(x=>x.home===id);
     G.phase='idle';renderAll();
     return villageEncounter(p,id,owner);
@@ -3629,7 +3650,7 @@ function renderTreasures(){
   //      quem joga a carta é o dono, pelo celular. ----
   if(host){
     if(lbl)lbl.textContent='Cartas de Magia · na mão de cada jogador (use pelo celular)';
-    box.innerHTML=G.players.map(pl=>
+    box.innerHTML=activePlayers().map(pl=>
       '<div class="treGroup"><div class="treHead"><span class="dot" style="background:'+pl.color+'"></span>'+
       pl.name+' · '+pl.cards.length+' carta'+(pl.cards.length!==1?'s':'')+
       (pl.cards.indexOf('amedrontar')>=0?' · tem defesa':'')+'</div>'+
@@ -3681,7 +3702,7 @@ function useTreasure(playerIdx,k){
 /* Visão de Dragão: escolhe um jogador/vilarejo e vê 2 fichas guardadas ali, em segredo
    (não marca t.revealed — é um vislumbre só para quem usou a magia) */
 function openVisaoPeek(p){
-  const ids=VILLAGE_IDS.filter(id=>N[id]&&N[id].type==='village');
+  const ids=VILLAGE_IDS.filter(id=>N[id]&&N[id].type==='village'&&!G.abandoned[id]);
   openModal('<h2>Visão de Dragão</h2><p class="lead">Escolha um jogador para ver 2 fichas guardadas no Vilarejo dele.</p>'+
     '<div class="body"><div class="picks">'+ids.map(id=>{
       const owner=G.players.find(pl=>pl.home===id);
@@ -3710,7 +3731,7 @@ function visaoPeekReveal(p,vid){
 }
 /* Alagar: escolhe um vilarejo e soma 2 marcadores de água (mesmo teto de 3 dos eventos) */
 function openAlagarPick(p){
-  const ids=VILLAGE_IDS.filter(id=>N[id]&&N[id].type==='village');
+  const ids=VILLAGE_IDS.filter(id=>N[id]&&N[id].type==='village'&&!G.abandoned[id]);
   openModal('<h2>Alagar</h2><p class="lead">Escolha um vilarejo para receber +2 marcadores de água.</p>'+
     '<div class="body"><div class="picks">'+ids.map(id=>{
       const owner=G.players.find(pl=>pl.home===id);
@@ -3749,8 +3770,18 @@ function endTurn(){
   clearDim();
   G.ventosUsed=false;
   G.turnsDone++;
-  if(G.turnsDone>=G.players.length){G.turnsDone=0;return endRound();}
-  G.turn=(G.turn+1)%G.players.length;
+  if(G.turnsDone>=nActive()){G.turnsDone=0;return endRound();}
+  G.turn=nextActive(G.turn);
+  startTurn();
+}
+/* passa a vez sem passar pelos Ventos da Sorte: usado quando o turno acaba
+   porque o jogador saiu da partida, não porque ele terminou a jogada */
+function forceNextTurn(){
+  closeModal();clearDim();
+  G.ventosUsed=false;
+  G.turnsDone++;
+  if(G.turnsDone>=nActive()){G.turnsDone=0;return endRound();}
+  G.turn=nextActive(G.turn);
   startTurn();
 }
 function ventosModal(p){
@@ -3786,7 +3817,7 @@ function endRound(){
   if(G.round>24)return gameOver();
   const s=Math.floor((G.round-1)/6);
   if(s!==G.season){G.season=s;buildDeck(s);log('Chegou o '+SEASONS[s].n+'.');seasonFanfare=true;}
-  G.turn=(G.turn+1)%G.players.length;
+  G.turn=nextActive(G.turn);
   revealEvent();
   renderAll();
   showEventReveal(G.event,startTurn);
@@ -3863,11 +3894,11 @@ function dragonPenalty(){
 /* ============================================================
    10. FIM DE JOGO
    ============================================================ */
-function gameOver(){
+function gameOver(motivo){
   closeModal();SFX.play('victory');
-  const rank=[...G.players].sort((a,b)=>eggsOf(b)-eggsOf(a));
+  const rank=activePlayers().sort((a,b)=>eggsOf(b)-eggsOf(a));   // quem saiu não entra na contagem
   const top=rank.length?eggsOf(rank[0]):0;
-  $('endReason').textContent='As estações chegaram ao fim (24 rodadas). '+
+  $('endReason').textContent=(motivo||'As estações chegaram ao fim (24 rodadas).')+' '+
     (rank.filter(p=>eggsOf(p)===top).length>1?'Vitória compartilhada. ':'')+'Vida longa aos Dragões.';
   $('rankList').innerHTML=rank.map((p,i)=>
     '<div class="rk'+(eggsOf(p)===top?' win':'')+'"><span class="pos">'+(i+1)+'</span>'+
@@ -4143,7 +4174,7 @@ var Net=(function(){
       roofBroken:!!G.broken[p.home],
       cards:p.cards.slice(),
       carried:p.carried.map(t=>({type:t.type,revealed:!!t.revealed})),
-      vills:VILLAGE_IDS.filter(id=>N[id]&&N[id].type==='village').map(id=>{
+      vills:VILLAGE_IDS.filter(id=>N[id]&&N[id].type==='village'&&!G.abandoned[id]).map(id=>{
         const owner=G.players.find(pl=>pl.home===id);
         const mine=!!owner&&owner.i===s.seat;
         const open=!!G.broken[id];
@@ -4310,11 +4341,15 @@ var Net=(function(){
     openTable,probe,join,send,leave,pushAll,toast,addBot,removeBot,closeTable,
     // um assento so tem celular se houver conexao viva (bot nunca tem)
     hasPhone(seat){const x=seats.find(y=>y.seat===seat);return !!(x&&x.c);},
-    // assento abandonado vira bot: o lugar continua existindo, mas sem esperar celular
-    makeBot(seat){
-      const x=seats.find(y=>y.seat===seat);
-      if(!x)return;
-      x.bot=true;x.c=null;
+    // jogador excluído da partida: o assento some da mesa e ele não consegue mais
+    // voltar pelo nome. O número do assento dos outros não muda (só reindexamos
+    // antes da partida começar), então G.players[i] continua alinhado.
+    dropSeat(seat){
+      const i=seats.findIndex(y=>y.seat===seat);
+      if(i<0)return;
+      const x=seats[i];
+      if(x.c){try{x.c.send({t:'closed'});}catch(_){}try{x.c.close();}catch(_){}}
+      seats.splice(i,1);
       notifySeats();
     },
     sendTo(seat,msg){
@@ -4584,7 +4619,8 @@ var MPUI=(function(){
    novo com o mesmo nome (a reconexão por assento já existia); se ele não voltar,
    o admin pode trocá-lo por um bot para a partida não morrer ali.
    ============================================================ */
-if($('npBot'))$('npBot').onclick=pauseSubstituteBot;
+if($('npGo'))$('npGo').onclick=dropMissingPlayers;
+if($('npCancel'))$('npCancel').onclick=cancelMatch;
 function missingPlayers(){
   if(!Net||!Net.isHost()||!Net.started())return [];
   return Net.seats().filter(x=>!x.on&&!x.bot);
@@ -4603,28 +4639,60 @@ function netPresenceChanged(){
     return;
   }
   G.paused=true;
+  $('npTitle').textContent=off.length>1?'Jogadores saíram da partida':'Um jogador saiu da partida';
   $('npText').textContent=off.length>1
-    ? 'Estes jogadores perderam a conexão. A partida está parada até eles voltarem.'
-    : 'Este jogador perdeu a conexão. A partida está parada até ele voltar.';
+    ? 'A partida parou na hora: estes jogadores não estão mais na sala.'
+    : 'A partida parou na hora: este jogador não está mais na sala.';
   $('npWho').innerHTML=off.map(x=>
     '<div class="who"><span class="av" style="background:'+COLORS[x.seat]+'">'+
     esc((x.name[0]||'?').toUpperCase())+'</span><span class="nm">'+esc(x.name)+'</span></div>').join('');
   box.classList.add('on');
 }
-/* volta do ponto onde parou: se era a vez de um bot, ele recomeça a jogar */
-/* saida de emergencia do admin: o assento vira bot e a partida segue */
-function pauseSubstituteBot(){
+
+/* tira o jogador do tabuleiro sem mexer no índice dos outros: o assento é o
+   índice em G.players, então ele fica marcado e some de toda a contagem.
+   O vilarejo dele fica abandonado — cinza, sem dono e sem valer roubo. */
+function dropPlayer(i){
+  const p=G.players[i];
+  if(!p||p.left)return;
+  p.left=true;
+  if(p.home)G.abandoned[p.home]=true;
+  p.cards=[];p.carried=[];     // Magias e fichas em mãos saem do jogo com ele
+  p.home=null;p.pos=null;
+  const g=document.getElementById('pawn_'+p.i);
+  if(g)g.remove();
+  log(p.name+' saiu da partida — o vilarejo dele ficou abandonado.');
+}
+
+/* "Continuar jogando": exclui quem saiu e a partida segue com quem ficou */
+function dropMissingPlayers(){
   const off=missingPlayers();
   if(!off.length)return;
-  off.forEach(x=>{
-    const p=G.players[x.seat];
-    if(p){p.bot=true;log(p.name+' nao voltou: um bot assumiu o lugar.');}
-    Net.makeBot(x.seat);
-  });
+  const eraDaVez=off.some(x=>x.seat===G.turn);
+  off.forEach(x=>{dropPlayer(x.seat);Net.dropSeat(x.seat);});
+  // só o que estava pendente NA MÃO de quem saiu cai; o resto da mesa continua
+  const saiu=s=>off.some(x=>x.seat===s);
+  if(G.pendingRoll&&saiu(G.pendingRoll.seat))cancelPendingRoll();
+  if(G.pendingNest&&saiu(G.pendingNest.seat))G.pendingNest=null;
+  if(G.pendingSteal&&saiu(G.pendingSteal.seat))G.pendingSteal=null;
+  if(G.pendingDefense&&off.some(x=>x.seat===G.pendingDefense.seat)){
+    const pd=G.pendingDefense;G.pendingDefense=null;pd.resolve(false);
+  }
   G.paused=false;
   $('netPause').classList.remove('on');
   renderAll();
+  if(nActive()<2){
+    log('Não sobrou gente suficiente para continuar — a partida acabou aqui.');
+    return gameOver('A partida acabou aqui: não sobrou gente suficiente para continuar.');
+  }
+  if(eraDaVez)return forceNextTurn();   // era a vez de quem saiu: passa adiante
   resumeAfterPause();
+}
+
+/* "Cancelar partida": fecha a sala (avisando os celulares) e volta pro começo */
+function cancelMatch(){
+  if(Net&&Net.isHost()){try{Net.closeTable();}catch(_){}}
+  setTimeout(()=>location.reload(),400);
 }
 /* pontinhos de espera, so pra tela nao parecer travada */
 setInterval(()=>{

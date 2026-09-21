@@ -89,6 +89,7 @@ relatado antes. Agora `index.html` aponta direto para `assets/audio/dice-sound.m
 | Mão de Cartas de Magia no painel                      | `renderTreasures` / `magiaHandHTML` / `MagiaPeek`         |
 | Dado e 1-de-3 do Ninho na tela do celular              | `G.pendingRoll` / `G.pendingNest`; `Phone.openDice/openNest` |
 | Mão de cartas no celular (arte, virar, Amedrontar)     | `magCardHTML` / `.ph-mag` / `G.players[i].autoDefend`     |
+| Jogador que sai da partida                             | `#netPause`; `dropPlayer` / `dropMissingPlayers` / `cancelMatch` |
 
 ## Regras implementadas (agosto/2026, com ajustes de setembro/2026 ao novo manual)
 
@@ -381,17 +382,39 @@ A escolha é do dono da carta e viaja como `autoDefend` até a mesa, que guarda 
 `askDefense()` passou a ter três caminhos: sem celular usa sozinha (bot/singleplayer),
 com celular **e** automático ligado usa sozinha, e só no manual abre o modal de decisão.
 
-### Partida pausada por desconexão
+### Jogador que sai da partida
 
-Um celular fora do ar é uma mão que ninguém pode jogar. Quando isso acontece com a
-partida já rolando, `netPresenceChanged()` liga `G.paused`, cobre a mesa com o aviso
-`#netPause` e congela tudo: bot não joga (`autoPlayTurn` e o disparo em `startTurn`
-checam a flag) e nada vindo de celular é aceito.
+Um celular fora do ar é uma mão que ninguém pode jogar. No instante em que alguém
+deixa a sala — tocando em **Sair** ou simplesmente perdendo a conexão —
+`netPresenceChanged()` liga `G.paused`, congela tudo (bot não joga, nada vindo de celular
+é aceito) e cobre a mesa com um aviso de erro (`#netPause`) dizendo quem saiu. Dali só
+se sai por dois caminhos:
 
-O jogador volta abrindo a mesma página e entrando **com o mesmo nome** — a reconexão
-por assento já existia, e ao voltar a pausa sai sozinha e o turno retoma de onde parou.
-Se ele não voltar, **Continuar com bot no lugar** converte o assento em bot
-(`Net.makeBot`) para a partida não morrer ali.
+- **Continuar jogando** (`dropMissingPlayers`) — exclui quem saiu e a partida segue com
+  quem ficou.
+- **Cancelar partida** (`cancelMatch`) — fecha a sala (avisando os celulares, liberando o
+  id no broker) e recarrega a página de volta na capa.
+
+Se a pessoa voltar pela mesma página **com o mesmo nome** antes disso, a reconexão por
+assento assume, a pausa sai sozinha e o turno retoma de onde parou — inclusive
+reenviando a tela do dado ou a das 3 fichas do Ninho, se havia uma pendente.
+
+#### Como a exclusão funciona por dentro
+
+O assento **é** o índice em `G.players` (peão, vilarejo, mão no celular, tudo pendurado
+nele), então tirar um elemento do array desalinharia o jogo inteiro. Em vez disso
+`dropPlayer(i)` marca `p.left = true` e o jogador some de toda a contagem:
+
+- `activePlayers()` / `nActive()` / `nextActive()` mandam na ordem de turno, no placar,
+  nos peões e no ranking final — uma rodada passa a ter tantos turnos quanto gente
+  ainda jogando.
+- O peão sai do tabuleiro; Magias e fichas carregadas saem do jogo com ele.
+- O vilarejo fica **abandonado** (`G.abandoned[id]`): cinza, sem dono, fora dos alvos de
+  Magia e da lista dos celulares, e quem pisar nele passa direto — vale como casa comum.
+- O que estava pendente **na mão de quem saiu** (dado, 1-de-3 do Ninho, roubo, defesa)
+  é cancelado; o que era de outro jogador continua de pé.
+- Se era a vez de quem saiu, `forceNextTurn()` passa adiante sem disparar os Ventos da Sorte.
+- Sobrando menos de dois jogadores, a partida encerra na hora e vai para o ranking.
 
 ### Artes das cartas
 
