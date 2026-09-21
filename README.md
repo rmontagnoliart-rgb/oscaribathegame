@@ -88,6 +88,7 @@ relatado antes. Agora `index.html` aponta direto para `assets/audio/dice-sound.m
 | Espiada nas fichas de um vilarejo (hover/toque longo)  | secao 7b: `VillPeek`                                     |
 | Mão de Cartas de Magia no painel                      | `renderTreasures` / `magiaHandHTML` / `MagiaPeek`         |
 | Dado e 1-de-3 do Ninho na tela do celular              | `G.pendingRoll` / `G.pendingNest`; `Phone.openDice/openNest` |
+| Mão de cartas no celular (arte, virar, Amedrontar)     | `magCardHTML` / `.ph-mag` / `G.players[i].autoDefend`     |
 
 ## Regras implementadas (agosto/2026, com ajustes de setembro/2026 ao novo manual)
 
@@ -350,6 +351,35 @@ ali, e a mesa fica apenas com *"Fulano está escolhendo 1 de 3 fichas no celular
 
 O log da mesa diz só *"pegou uma ficha do Monte do Dragão"* — nunca qual. Se o `sendTo`
 falhar (celular fora do ar), cai no modal antigo da tablet, igual ao roubo em vilarejo.
+
+### A mão no celular: só a arte, e o texto no verso
+
+A legenda embaixo de cada carta comia metade da tela e repetia o que a arte já diz.
+Agora a mão (`.ph-hand`) mostra **só a arte, em tamanho grande**, tanto nas Cartas de
+Magia quanto nas fichas carregadas. O que sumiu junto foram as tags de rodada/estação/
+evento/ovos abaixo do aviso de vez: tudo isso já está no tabuleiro. `#phMeta` continua
+existindo, mas só o lobby escreve nele (a lista de quem entrou na sala).
+
+O **aviso de vez** virou o destaque da tela: cartão com sombra, faixa lateral na cor de
+quem está jogando e o nome em corpo grande — *"Vez de Bia"* / *"É a sua vez"*. O nome e a
+cor vêm no payload da mão (`turnName` / `turnColor`).
+
+Cada Carta de Magia tem um **botão de virar na lateral** (⟳). Ele mora fora do elemento
+que gira, então continua visível nas duas faces. A carta faz um flip 3D de verdade
+(`rotateY` + `backface-visibility`) e mostra o **verso oficial** (`magia-verso.webp`, o
+mesmo PDF de impressão) com o nome e o efeito subindo do pé da carta — o topo do verso
+fica à mostra de propósito. Tocar na frente usa a carta, como antes.
+
+### Amedrontar: automático ou perguntar antes
+
+O verso de **Amedrontar** carrega uma chave. Ligada (padrão), a carta dispara sozinha no
+instante em que um roubo ia dar certo. Desligada, a mesa volta a perguntar no celular
+antes de gastar a carta — que era o comportamento fixo até agora.
+
+A escolha é do dono da carta e viaja como `autoDefend` até a mesa, que guarda em
+`G.players[i].autoDefend` e devolve no payload da mão (sobrevive a reconexão).
+`askDefense()` passou a ter três caminhos: sem celular usa sozinha (bot/singleplayer),
+com celular **e** automático ligado usa sozinha, e só no manual abre o modal de decisão.
 
 ### Partida pausada por desconexão
 

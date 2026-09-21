@@ -668,10 +668,23 @@
     border-radius:999px;padding:9px 15px;font:500 12px/1 "Google Sans",Roboto,sans-serif;cursor:pointer}
   .ph-leave:active{background:#f1f3f4}
 
-  .ph-turn{margin:14px 16px 0;border-radius:14px;padding:13px 16px;font-size:14px;line-height:1.45;
-    background:var(--surface);border:1px solid var(--line);color:var(--text2)}
-  .ph-turn.mine{background:#e8f0fe;border-color:#d2e3fc;color:#174ea6;font-weight:500}
+  /* aviso de vez: é a informação mais importante da tela, então ganha corpo de
+     cartão, uma faixa na cor de quem está jogando e o nome em destaque */
+  /* flex:none porque #phone é uma coluna flex e encolheria o cartão até cortar o texto */
+  .ph-turn{flex:none;position:relative;overflow:hidden;margin:14px 16px 0;border-radius:16px;
+    padding:15px 17px 15px 21px;font-size:14px;line-height:1.45;
+    background:var(--surface);border:1px solid var(--line);color:var(--text2);box-shadow:var(--sh1)}
+  .ph-turn::before{content:'';position:absolute;left:0;top:0;bottom:0;width:6px;
+    background:var(--tc,var(--line));transition:background .2s var(--ease)}
+  .ph-turn b{display:block;font:500 19px/1.2 "Google Sans",Roboto,sans-serif;color:var(--text);
+    letter-spacing:-.2px}
+  .ph-turn i{display:block;font-style:normal;font-size:12.5px;line-height:1.45;
+    color:var(--text2);margin-top:5px}
+  .ph-turn.mine{background:#e8f0fe;border-color:#d2e3fc}
+  .ph-turn.mine b{color:#174ea6}
+  .ph-turn.mine i{color:#1967d2}
   .ph-meta{display:flex;gap:8px;flex-wrap:wrap;margin:12px 16px 0}
+  .ph-meta:empty{display:none}
   .ph-meta span{font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--text2);
     background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px}
 
@@ -679,7 +692,62 @@
   .ph-sect > .lbl{font-size:11.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--text3);
     margin-bottom:10px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
   .ph-sect > .lbl em{font-style:normal;font-size:11px;letter-spacing:.2px;text-transform:none;color:var(--text3)}
-  .ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
+  .ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
+
+  /* ---------- a mão: só a arte, grande ----------
+     A legenda embaixo de cada carta comia metade do espaço e repetia o que a
+     própria arte já diz. Aqui a carta ocupa a célula inteira; o texto da Magia
+     mora no verso, alcançado pelo ícone de virar na lateral. */
+  .ph-hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px 18px}
+  .ph-mag,.ph-tok{position:relative}
+  .ph-tok{border-radius:14px;overflow:hidden;box-shadow:var(--sh1);background:#f1f3f4;
+    border:1px solid var(--line)}
+  .ph-tok img{display:block;width:100%;aspect-ratio:405/624;object-fit:cover}
+  .ph-tok.open{border-color:#f6cbc8;box-shadow:0 0 0 2px #ea4335,var(--sh1)}
+
+  /* virar a carta de Magia: perspectiva no contêiner, duas faces costa com costa */
+  .ph-mag{perspective:1000px}
+  .ph-flip{position:relative;width:100%;aspect-ratio:405/624;transform-style:preserve-3d;
+    transition:transform .55s cubic-bezier(.2,.75,.2,1)}
+  .ph-mag.flipped .ph-flip{transform:rotateY(180deg)}
+  .ph-face{position:absolute;inset:0;border-radius:14px;overflow:hidden;
+    -webkit-backface-visibility:hidden;backface-visibility:hidden;
+    background:#f1f3f4;border:1px solid var(--line);box-shadow:var(--sh1)}
+  .ph-face img{display:block;width:100%;height:100%;object-fit:cover}
+  .ph-face.front{cursor:pointer}
+  .ph-face.front:active{filter:brightness(.95)}
+  .ph-face.back{transform:rotateY(180deg)}
+  /* o botão de virar fica fora do elemento que gira: continua na lateral nas duas faces */
+  .ph-flipbtn{position:absolute;right:-14px;top:50%;transform:translateY(-50%);z-index:4;
+    appearance:none;width:36px;height:36px;border-radius:50%;cursor:pointer;
+    background:var(--surface);border:1px solid var(--line);color:var(--text2);
+    box-shadow:0 2px 6px rgba(60,64,67,.35);display:grid;place-items:center;padding:0}
+  .ph-flipbtn:active{background:#f1f3f4;transform:translateY(-50%) scale(.94)}
+  .ph-mag.flipped .ph-flipbtn{color:var(--blue);border-color:#d2e3fc;background:#e8f0fe}
+
+  /* verso + explicação por cima */
+  /* o verso continua aparecendo no topo: a explicação sobe do pé da carta */
+  .ph-back{position:absolute;inset:0;padding:12px 11px 12px;display:flex;flex-direction:column;
+    justify-content:flex-end;gap:6px;color:#f6ecff;text-align:left;
+    background:linear-gradient(180deg,rgba(20,10,30,0) 0%,rgba(18,9,26,.55) 22%,
+      rgba(14,7,20,.9) 48%,rgba(11,5,16,.96) 100%)}
+  .ph-back .bt{font:500 15px/1.2 "Google Sans",Roboto,sans-serif;color:#ffe9b8}
+  .ph-back .bd{font-size:11.5px;line-height:1.4;color:#d8c8ec}
+  .ph-back .buse{margin-top:4px;appearance:none;border:0;cursor:pointer;border-radius:9px;height:36px;
+    font:500 13px/1 "Google Sans",Roboto,sans-serif;color:#fff;background:var(--blue)}
+  .ph-back .buse:active{filter:brightness(.92)}
+  .ph-back .buse[disabled]{background:rgba(255,255,255,.16);color:#b9a9cc;cursor:default}
+  /* chave do automático do Amedrontar */
+  .ph-sw{margin-top:4px;display:flex;align-items:center;gap:9px;cursor:pointer;
+    background:rgba(255,255,255,.1);border-radius:10px;padding:8px 9px}
+  .ph-sw .lb{flex:1;min-width:0;font:500 11.5px/1.25 "Google Sans",Roboto,sans-serif;color:#f6ecff}
+  .ph-sw .tr{flex:none;width:38px;height:22px;border-radius:11px;position:relative;
+    background:rgba(255,255,255,.28);transition:background .2s var(--ease)}
+  .ph-sw .tr i{position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;
+    background:#fff;transition:left .2s var(--ease)}
+  .ph-sw.on .tr{background:var(--green)}
+  .ph-sw.on .tr i{left:19px}
+  .ph-swhint{font-size:10.5px;line-height:1.4;color:#b9a9cc}
   .ph-card{position:relative;border-radius:14px;overflow:hidden;background:var(--surface);
     border:1px solid var(--line);box-shadow:var(--sh1)}
   .ph-card img{display:block;width:100%;aspect-ratio:405/624;object-fit:cover;background:#f1f3f4}
@@ -1210,13 +1278,13 @@
   <div class="ph-meta" id="phMeta"></div>
 
   <div class="ph-sect">
-    <div class="lbl">Cartas de Magia <em>· pode usar a qualquer momento</em></div>
-    <div class="ph-grid" id="phMagia"></div>
+    <div class="lbl">Cartas de Magia <em>· toque na carta para usar · ⟲ na lateral vira</em></div>
+    <div class="ph-hand" id="phMagia"></div>
   </div>
 
   <div class="ph-sect">
     <div class="lbl">Fichas do Monte do Dragão <em>· na sua mão, viradas para baixo</em></div>
-    <div class="ph-grid" id="phFichas"></div>
+    <div class="ph-hand" id="phFichas"></div>
   </div>
 
   <div class="ph-sect">
@@ -1738,7 +1806,10 @@ document.getElementById('autoRoundBtn').onclick=function(){
 function start(){
   buildPool();buildMagia();buildDeck(0);
   G.players=SEATS[nP].map((v,i)=>({i,name:NAMES[i],color:COLORS[i],home:'V'+v,pos:'V'+v,
-    carried:[],cards:[],skip:false,blessed:false,cursed:false,villTok:null}));
+    carried:[],cards:[],skip:false,blessed:false,cursed:false,villTok:null,
+    // Amedrontar dispara sozinha por padrão (a carta só tem vantagem); no celular
+    // o jogador pode desligar isso e passar a ser consultado a cada roubo
+    autoDefend:true}));
   // no multiplayer cada assento passa a usar o nome que o jogador digitou no celular
   if(Net&&Net.isHost())Net.applyNames(G.players);
   // vilarejos = quantidade de jogadores: as vilas não usadas viram casas comuns da trilha
@@ -3120,7 +3191,9 @@ function askDefense(vitima,ladrao,cb){
     SFX.play("stealFail");
     renderAll();
   };
-  if(!(Net&&Net.isHost()&&Net.hasPhone(vitima.i))){
+  // sem celular (bot/singleplayer) ou com a defesa no automático: usa sozinha.
+  // O automático é a escolha do dono da carta, feita no celular dele.
+  if(!(Net&&Net.isHost()&&Net.hasPhone(vitima.i))||vitima.autoDefend){
     gastar();return cb(true);
   }
   let feito=false;
@@ -3966,6 +4039,18 @@ var Net=(function(){
       return;
     }
 
+    /* o dono da carta decidiu, no celular, se Amedrontar dispara sozinha */
+    if(d.t==='autoDefend'){
+      const s=seatOf(c);
+      if(!s||!started)return;
+      const p=G.players[s.seat];
+      if(!p)return;
+      p.autoDefend=!!d.on;
+      log(p.name+' deixou Amedrontar '+(p.autoDefend?'no automático.':'no manual — vai ser perguntado.'));
+      pushAll();
+      return;
+    }
+
     /* resposta da defesa (Amedrontar) */
     if(d.t==='defendUse'){
       const st=seatOf(c);
@@ -4051,6 +4136,9 @@ var Net=(function(){
       round:G.round,total:24,season:SEASONS[G.season].n,
       event:(G.event&&EVT[G.event])?EVT[G.event].n:null,
       yourTurn:G.turn===s.seat,phase:G.phase,playable:G.phase!=='setup',
+      turnName:(G.players[G.turn]?G.players[G.turn].name:''),
+      turnColor:(G.players[G.turn]?G.players[G.turn].color:'#5f6368'),
+      autoDefend:p.autoDefend!==false,
       eggs:eggsOf(p),blessed:!!p.blessed,cursed:!!p.cursed,
       roofBroken:!!G.broken[p.home],
       cards:p.cards.slice(),
@@ -4565,6 +4653,8 @@ function resumeAfterPause(){
    ============================================================ */
 var Phone=(function(){
   let last=null,peeked={},lastN=-1;
+  /* cartas de Magia viradas para o verso (índice -> true); zera quando a mão muda */
+  let flipped={},lastCards=null;
   /* visao de vilarejo: qual esta aberto, o que ja foi espiado nele e qual
      interacao esta pendente ('visao' | 'alagar' | null) */
   let vOpen=null,vPeek={},pending=null,picks=[];
@@ -4733,6 +4823,46 @@ var Phone=(function(){
     $('phMeta').innerHTML=(d.names||[]).map(n=>'<span>'+esc(n)+'</span>').join('');
   }
 
+  /* ícone de virar, na lateral da carta de Magia */
+  const FLIP_ICON='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"'+
+    ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+
+    '<path d="M3 9a9 9 0 0 1 14.5-3.5L21 9"/><path d="M21 4.5V9h-4.5"/>'+
+    '<path d="M21 15a9 9 0 0 1-14.5 3.5L3 15"/><path d="M3 19.5V15h4.5"/></svg>';
+
+  function autoHint(on){
+    return on?'Some da sua mão sozinha e barra o roubo na hora.'
+             :'A mesa pergunta antes de gastar a carta.';
+  }
+  function paintAuto(root,on){
+    root.querySelectorAll('.ph-sw').forEach(x=>{
+      x.classList.toggle('on',on);
+      const lb=x.querySelector('.lb');if(lb)lb.textContent=on?'Dispara sozinha':'Perguntar antes';
+      const h=x.parentElement.querySelector('.ph-swhint');if(h)h.textContent=autoHint(on);
+    });
+  }
+  /* Uma carta de Magia: frente = só a arte; verso = a arte do verso com o nome,
+     o efeito e (no Amedrontar) a chave do automático. O botão da lateral vive
+     fora do elemento que gira, para continuar visível nas duas faces. */
+  function magCardHTML(c,k,d){
+    const guard=(c==='amedrontar');
+    const usable=!guard&&d.playable;
+    const auto=d.autoDefend!==false;
+    const front='<div class="ph-face front"'+
+      (usable?' data-use="'+c+'"':(guard?' data-flipface="'+k+'"':''))+'>'+
+      '<img src="'+MAGIA_IMGS[c]+'" alt="'+esc(MAGIA[c].n)+'"></div>';
+    const body=guard
+      ? '<div class="ph-sw'+(auto?' on':'')+'"><span class="lb">'+
+          (auto?'Dispara sozinha':'Perguntar antes')+'</span><span class="tr"><i></i></span></div>'+
+        '<div class="ph-swhint">'+autoHint(auto)+'</div>'
+      : '<button class="buse" data-use="'+c+'"'+(d.playable?'':' disabled')+'>Usar agora</button>';
+    const back='<div class="ph-face back"><img src="'+MAGIA_VERSO_IMG+'" alt="">'+
+      '<div class="ph-back"><div class="bt">'+esc(MAGIA[c].n)+'</div>'+
+      '<div class="bd">'+esc(MAGIA[c].d)+'</div>'+body+'</div></div>';
+    return '<div class="ph-mag'+(flipped[k]?' flipped':'')+'">'+
+      '<div class="ph-flip">'+front+back+'</div>'+
+      '<button class="ph-flipbtn" data-k="'+k+'" aria-label="Virar a carta">'+FLIP_ICON+'</button></div>';
+  }
+
   function hand(d){
     if(d.carried.length!==lastN){peeked={};lastN=d.carried.length;}
     last=d;
@@ -4743,47 +4873,64 @@ var Phone=(function(){
     $('phRoom').classList.remove('off');
 
     const t=$('phTurn');
-    if(d.yourTurn){t.className='ph-turn mine';t.textContent='É a sua vez — jogue no tabuleiro.';}
-    else{t.className='ph-turn';t.textContent='Vez de outro jogador. Suas Magias podem ser usadas a qualquer momento.';}
+    if(d.yourTurn){
+      t.className='ph-turn mine';
+      t.style.setProperty('--tc',d.color||COLORS[d.seat]||'#1a73e8');
+      t.innerHTML='<b>É a sua vez</b><i>Acompanhe o movimento no tabuleiro.</i>';
+    }else{
+      t.className='ph-turn';
+      t.style.setProperty('--tc',d.turnColor||'#5f6368');
+      t.innerHTML='<b>Vez de '+esc(d.turnName||'outro jogador')+'</b>'+
+        '<i>Suas Magias podem ser usadas a qualquer momento.</i>';
+    }
 
-    $('phMeta').innerHTML=['Rodada '+d.round+'/'+d.total,d.season,
-      d.event?('Evento: '+d.event):null,
-      d.eggs+' ovo'+(d.eggs!==1?'s':''),
-      d.cards.indexOf('amedrontar')>=0?'Amedrontar de guarda':null,
-      d.blessed?'Bênção do Dragão':null,
-      d.cursed?'Amaldiçoado':null,
-      d.roofBroken?'Teto do seu vilarejo desabou':null]
-      .filter(Boolean).map(s=>'<span>'+esc(s)+'</span>').join('');
+    // as tags de rodada/estação/evento saíram: elas repetem o que já está no
+    // tabuleiro e roubavam a tela das cartas. #phMeta segue vivo só para o lobby.
+    $('phMeta').innerHTML='';
+
+    // a mão pode ter mudado de tamanho: o que estava virado perde o sentido
+    const sig=d.cards.join('|');
+    if(sig!==lastCards){flipped={};lastCards=sig;}
 
     const mg=$('phMagia');
-    mg.innerHTML=d.cards.length?d.cards.map((c,k)=>{
-      // Amedrontar é defesa: não se joga na vez, a mesa pergunta quando te roubam
-      const guard=(c==='amedrontar');
-      const off=guard||!d.playable;
-      return '<div class="ph-card">'+
-        (guard?'<span class="ph-tag">Defesa</span>':'')+
-        '<img src="'+MAGIA_IMGS[c]+'" alt="">'+
-        '<div class="cap"><div class="ttl">'+esc(MAGIA[c].n)+'</div>'+
-        '<div class="sub">'+esc(guard?'Fica de guarda: quando alguém tentar te roubar, a mesa pergunta se você quer usá-la.':MAGIA[c].d)+'</div>'+
-        '<button class="ph-use" data-k="'+k+'" data-c="'+c+'"'+(off?' disabled':'')+'>'+
-        (guard?'Automática':'Usar')+'</button></div></div>';
-    }).join(''):'<div class="ph-none">Nenhuma carta de Magia na sua mão.</div>';
-    mg.querySelectorAll('.ph-use:not([disabled])').forEach(b=>{
-      b.onclick=()=>openMagic(b.dataset.c);
+    mg.innerHTML=d.cards.length?d.cards.map((c,k)=>magCardHTML(c,k,d)).join('')
+      :'<div class="ph-none">Nenhuma carta de Magia na sua mão.</div>';
+    mg.querySelectorAll('.ph-flipbtn').forEach(b=>{
+      b.onclick=e=>{
+        e.stopPropagation();
+        const k=+b.dataset.k;
+        flipped[k]=!flipped[k];
+        b.closest('.ph-mag').classList.toggle('flipped',!!flipped[k]);
+      };
+    });
+    mg.querySelectorAll('[data-use]').forEach(b=>{
+      b.onclick=e=>{e.stopPropagation();openMagic(b.dataset.use);};
+    });
+    mg.querySelectorAll('[data-flipface]').forEach(b=>{   // Amedrontar não se joga: tocar vira
+      b.onclick=()=>{
+        const k=+b.dataset.flipface;
+        flipped[k]=!flipped[k];
+        b.closest('.ph-mag').classList.toggle('flipped',!!flipped[k]);
+      };
+    });
+    // o automático é um só por jogador: se ele tiver duas Amedrontar, as duas chaves andam juntas
+    mg.querySelectorAll('.ph-sw').forEach(sw=>{
+      sw.onclick=e=>{
+        e.stopPropagation();
+        const on=!sw.classList.contains('on');
+        paintAuto(mg,on);
+        Net.send({t:'autoDefend',on});
+      };
     });
 
+    // fichas carregadas: só a arte. O olho espia sem revelar para ninguém.
     const fx=$('phFichas');
     fx.innerHTML=d.carried.length?d.carried.map((tk,k)=>{
       const face=tk.revealed||!!peeked[k];
-      return '<div class="ph-card">'+
-        (tk.revealed?'<span class="ph-tag hot">Revelada a todos</span>':'<span class="ph-tag">Oculta</span>')+
+      return '<div class="ph-tok'+(tk.revealed?' open':'')+'">'+
         (tk.revealed?'':'<button class="ph-peek" data-k="'+k+'">'+(peeked[k]?'🙈':'👁')+'</button>')+
         '<img src="'+(face?FICHA_IMGS[tk.type]:FICHA_VERSO_IMG)+'" alt="">'+
-        '<div class="cap"><div class="ttl">'+esc(face?TOK[tk.type].n:'Ficha virada')+'</div>'+
-        '<div class="sub">'+(tk.revealed
-          ? 'O teto do seu vilarejo desabou — todos podem ver esta ficha.'
-          : 'Só você pode espiar. A ordem das cartas na mão é fixa.')+
-        '</div></div></div>';
+        '</div>';
     }).join(''):'<div class="ph-none">Você não está carregando nenhuma ficha.</div>';
     fx.querySelectorAll('.ph-peek').forEach(b=>{
       b.onclick=()=>{const k=+b.dataset.k;peeked[k]=!peeked[k];if(last)hand(last);};
