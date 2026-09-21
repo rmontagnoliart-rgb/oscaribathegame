@@ -47,13 +47,12 @@
     display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text2)}
   .chip b{color:var(--text);font-weight:500}
   .scores{margin-left:auto;display:flex;gap:8px}
-  .score{height:40px;padding:0 11px 0 7px;border-radius:20px;background:#f8f9fa;border:1px solid var(--line-soft);
+  .score{height:38px;padding:0 13px 0 6px;border-radius:19px;background:#f8f9fa;border:1px solid var(--line-soft);
     display:flex;align-items:center;gap:8px;transition:box-shadow .15s var(--ease),border-color .15s var(--ease)}
   .score.on{background:#fff;border-color:transparent;box-shadow:var(--sh1)}
   .score .dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;
     font-size:12px;font-weight:500}
-  .score .n{font-size:11px;color:var(--text2);line-height:1.1}
-  .score .v{font-size:16px;font-weight:500;line-height:1.1}
+  .score .n{font-size:12.5px;color:var(--text);line-height:1.1;white-space:nowrap}
 
   .main{height:832px;display:flex}
   .side{width:240px;background:var(--surface);display:flex;flex-direction:column}
@@ -83,26 +82,11 @@
   .tok .f svg{display:block}
   .empty{font-size:12px;color:var(--text3)}
 
-  .card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;gap:12px;align-items:center;
-    cursor:pointer;background:#fff;transition:box-shadow .15s var(--ease),transform .1s var(--ease)}
-  .card+.card{margin-top:8px}
-  .card:hover{box-shadow:var(--sh2);transform:translateY(-1px)}
-  .card.dis{opacity:.55;cursor:default}
-  .card.dis:hover{box-shadow:none;transform:none}
-  .card .icwrap{flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
-  .card .ttl{font-size:13.5px;font-weight:600}
-  .card .sub{font-size:11.5px;color:var(--text2);line-height:1.35;margin-top:2px}
-  /* cartas de Magia de TODOS os jogadores, usáveis a qualquer momento */
+  /* cartas de Magia de TODOS os jogadores, usáveis a qualquer momento (ver .mhand) */
   .treGroup+.treGroup{margin-top:14px}
   .treGroup .treHead{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3);
     text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
   .treGroup .treHead .dot{width:9px;height:9px;border-radius:50%;flex:none}
-  .card.usable{border-color:var(--yellow);box-shadow:0 0 0 1px rgba(251,188,4,.35)}
-  .card.usable:hover{box-shadow:0 0 0 1px rgba(251,188,4,.6),var(--sh2)}
-  .card.shielded{border-color:var(--green);background:#e6f4ea}
-  .card .badge{margin-left:auto;font-size:10px;font-weight:700;color:#956200;background:#fef7e0;
-    border-radius:8px;padding:2px 7px;flex:none;letter-spacing:.2px}
-  .card.shielded .badge{color:var(--green);background:#e6f4ea}
 
   .evt{border-radius:12px;padding:16px;color:#fff;position:relative;overflow:hidden;min-height:150px;
     display:flex;flex-direction:column;justify-content:space-between;transition:background .2s var(--ease)}
@@ -435,6 +419,132 @@
   #setup .bgArt.on{opacity:1}
   #setup .setup-card{position:relative;z-index:1}
 
+  /* ---------- espiada nas fichas do vilarejo (hover / toque longo) ---------- */
+  /* O leque no tabuleiro é pequeno demais para ler as cartas. Passar o mouse por
+     cima de um vilarejo (ou segurar o dedo 2s, no tablet) abre este cartão branco
+     junto do ponteiro, com as mesmas cartas em tamanho legível. Continua sendo só
+     leitura: o que está virado para baixo no tabuleiro continua virado aqui. */
+  #villPeek{position:fixed;left:0;top:0;z-index:60;pointer-events:none;
+    opacity:0;transform:translateY(6px) scale(.97);transform-origin:top left;
+    transition:opacity .12s var(--ease),transform .12s var(--ease);
+    background:#fff;border-radius:14px;padding:12px 14px;max-width:432px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35),0 0 0 1px rgba(60,64,67,.14)}
+  #villPeek.on{opacity:1;transform:none}
+  .vpk-head{display:flex;align-items:center;gap:8px;white-space:nowrap}
+  .vpk-head .dot{width:12px;height:12px;border-radius:50%;flex:none;background:#bdc1c6}
+  .vpk-head b{font:500 14px/1 "Google Sans",Roboto,sans-serif;color:var(--text)}
+  .vpk-head em{font-style:normal;font-size:11.5px;color:var(--text2);margin-left:2px}
+  .vpk-cards{display:flex;flex-wrap:wrap;gap:9px;margin-top:11px}
+  .vpk-cards.empty{margin-top:8px;font-size:12px;color:var(--text3)}
+  .vpk-card{display:flex;flex-direction:column;align-items:center;gap:5px;width:78px}
+  .vpk-card svg{display:block;border-radius:5px;box-shadow:0 2px 5px rgba(0,0,0,.35)}
+  .vpk-card span{font-size:10.5px;line-height:1.2;color:var(--text2);text-align:center}
+  .vpk-card.hidden span{color:var(--text3)}
+
+  /* ---------- mão de Cartas de Magia ---------- */
+  /* O painel mostrava linhas de texto com uma miniatura minúscula: dava para ler, mas
+     não parecia uma carta e o botão "Usar" ficava perdido. Agora é uma mão de verdade —
+     as artes lado a lado, sobrepostas — e o texto da carta vem no cartãozinho que segue
+     o ponteiro, igual ao do vilarejo. */
+  .mhand{display:flex;align-items:flex-end;padding:14px 0 6px}
+  .mcard{position:relative;flex:none;appearance:none;border:0;padding:0;background:none;cursor:pointer;
+    transition:transform .16s var(--ease)}
+  .mcard svg{display:block;border-radius:7px;
+    box-shadow:0 2px 6px rgba(0,0,0,.32),0 0 0 1px rgba(32,20,8,.25);
+    transition:box-shadow .16s var(--ease)}
+  .mcard.on{transform:translateY(-13px) scale(1.05);z-index:5}
+  .mcard.on svg{box-shadow:0 14px 26px rgba(0,0,0,.42),0 0 0 2px var(--yellow)}
+  /* Amedrontar não se joga na vez: é defesa reativa, então fica marcada em verde e sem clique */
+  .mcard.def{cursor:default}
+  .mcard.def svg{box-shadow:0 2px 6px rgba(0,0,0,.32),0 0 0 2px var(--green)}
+  .mcard.def.on svg{box-shadow:0 14px 26px rgba(0,0,0,.42),0 0 0 2px var(--green)}
+  .mcard.back{cursor:default}
+  .mcard.back.on{transform:translateY(-6px)}
+  .mcard.back.on svg{box-shadow:0 10px 20px rgba(0,0,0,.4),0 0 0 1px rgba(32,20,8,.25)}
+
+  #magiaPeek{position:fixed;left:0;top:0;z-index:60;pointer-events:none;
+    opacity:0;transform:translateY(6px) scale(.97);transform-origin:top left;
+    transition:opacity .12s var(--ease),transform .12s var(--ease);
+    background:#fff;border-radius:12px;padding:12px 14px;width:236px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35),0 0 0 1px rgba(60,64,67,.14)}
+  #magiaPeek.on{opacity:1;transform:none}
+  .mpk-title{font:500 14.5px/1.2 "Google Sans",Roboto,sans-serif;color:var(--text)}
+  .mpk-desc{font-size:12px;line-height:1.45;color:var(--text2);margin-top:6px}
+  .mpk-act{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+    margin-top:9px;color:#956200}
+  .mpk-act.def{color:var(--green)}
+
+  /* ---------- escolha da ficha de Vilarejo ---------- */
+  /* Mesma moldura do setup (fora de #stage, sobre a capa desfocada), mas larga o
+     bastante para as seis fichas caberem em duas fileiras sem encolher a arte. */
+  #vpick{z-index:32;padding:18px;overflow-y:auto}
+  #vpick .bgArt{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;
+    filter:blur(7px) brightness(.42) saturate(.9);transform:scale(1.07);transition:opacity .6s var(--ease)}
+  #vpick .bgArt.on{opacity:1}
+  .vp-card{position:relative;z-index:1;width:820px;max-width:94vw;border-radius:20px;padding:30px 34px 24px;
+    background:var(--surface);box-shadow:var(--sh2)}
+  .vp-head{display:flex;align-items:flex-start;gap:20px}
+  .vp-titles{flex:1;min-width:0}
+  .vp-card h2{font-size:26px;font-weight:400;letter-spacing:-.2px}
+  .vp-card p.sub{font-size:13.5px;color:var(--text2);margin-top:6px;max-width:460px}
+  .vp-turn{display:flex;align-items:center;gap:11px;flex:none;padding:9px 15px 9px 9px;
+    border-radius:34px;background:#f1f3f4;transition:background .2s var(--ease)}
+  .vp-turn .av{width:38px;height:38px;border-radius:50%;flex:none;color:#fff;display:grid;place-items:center;
+    font:500 17px/1 "Google Sans",Roboto,sans-serif;background:#5f6368}
+  .vp-turn .who{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .vp-turn b{font:500 15px/1.15 "Google Sans",Roboto,sans-serif;color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+  .vp-turn em{font-style:normal;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--text3)}
+
+  .vp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0 20px}
+  .vp-tok{position:relative;appearance:none;border:0;padding:0;background:none;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:9px;
+    transition:transform .18s var(--ease)}
+  .vp-tok .disc{position:relative;width:100%;aspect-ratio:1/1;border-radius:50%;overflow:hidden;
+    background:#e8eaed;
+    box-shadow:0 2px 6px rgba(60,64,67,.35),inset 0 0 0 1px rgba(32,20,8,.35);
+    transition:box-shadow .18s var(--ease),filter .25s var(--ease)}
+  .vp-tok .disc img{width:100%;height:100%;object-fit:cover;display:block}
+  .vp-tok .nm{font:500 13px/1.25 "Google Sans",Roboto,sans-serif;color:var(--text);text-align:center}
+  .vp-tok .ds{font-size:11px;line-height:1.35;color:var(--text3);text-align:center;
+    max-width:200px;min-height:29px}
+  .vp-tok:not(.taken):not(.mine):hover{transform:translateY(-4px)}
+  .vp-tok:not(.taken):not(.mine):hover .disc{box-shadow:0 10px 22px rgba(60,64,67,.4),inset 0 0 0 1px rgba(32,20,8,.35),0 0 0 4px var(--blue)}
+  /* já escolhida por alguém: apaga, ganha a cor do dono e o nome dele por cima */
+  .vp-tok.taken{cursor:default}
+  .vp-tok.taken .disc{filter:grayscale(.75) brightness(.62)}
+  .vp-tok.taken .nm,.vp-tok.taken .ds{color:var(--text3)}
+  .vp-owner{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    display:flex;align-items:center;gap:7px;padding:6px 13px 6px 6px;border-radius:26px;
+    background:rgba(255,255,255,.95);box-shadow:0 2px 8px rgba(0,0,0,.4);
+    font:500 12.5px/1 "Google Sans",Roboto,sans-serif;color:var(--text);white-space:nowrap;
+    max-width:92%;animation:pop .22s var(--ease)}
+  .vp-owner .dot{width:20px;height:20px;border-radius:50%;flex:none;color:#fff;display:grid;place-items:center;
+    font-size:11px}
+  .vp-owner span{overflow:hidden;text-overflow:ellipsis}
+  /* a que o jogador da vez acabou de escolher: fica acesa na cor dele por um instante */
+  .vp-tok.mine .disc{filter:none;
+    box-shadow:0 10px 24px rgba(60,64,67,.45),inset 0 0 0 1px rgba(32,20,8,.35),0 0 0 5px currentColor}
+
+  .vp-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;
+    border-top:1px solid var(--line-soft);padding-top:14px}
+  .vp-dots{display:flex;gap:7px}
+  .vp-dots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block;
+    transition:background .2s var(--ease),transform .2s var(--ease)}
+  .vp-dots i.done{transform:scale(1.15)}
+  .vp-dots i.now{transform:scale(1.35);box-shadow:0 0 0 3px rgba(26,115,232,.18)}
+  .vp-hint{font-size:12.5px;color:var(--text2);text-align:right}
+  @media (max-height:780px){
+    .vp-card{padding:22px 28px 18px}
+    .vp-grid{gap:12px;margin:18px 0 14px}
+    .vp-tok .ds{display:none}
+  }
+  @media (max-width:760px){
+    .vp-head{flex-direction:column;gap:12px}
+    .vp-grid{grid-template-columns:repeat(2,1fr)}
+    .vp-tok .ds{display:none}
+  }
+
   /* ============================================================
      LOBBY MULTIPLAYER (tabuleiro) + MÃO NO CELULAR
      A capa passa a oferecer SINGLEPLAYER (fluxo antigo, tudo na tablet) e
@@ -532,7 +642,8 @@
      Visual claro e minimalista, no mesmo sistema do resto do app (Material/Google):
      fundo branco, tipografia em cinza, azul só onde é ação. */
   body.phone{overflow:auto;touch-action:auto;background:var(--bg)}
-  body.phone #stage,body.phone #rotateNotice,body.phone #fsBtn{display:none!important}
+  body.phone #stage,body.phone #rotateNotice,body.phone #fsBtn,
+  body.phone #setup,body.phone #vpick{display:none!important}
   #phone{display:none;position:fixed;inset:0;z-index:2000;flex-direction:column;
     background:var(--bg);color:var(--text);
     overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
@@ -646,6 +757,10 @@
   .ph-vill:active{background:#f8f9fa}
   .ph-vill .av{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;
     font:500 13px/1 "Google Sans",Roboto,sans-serif}
+  /* com ficha escolhida, o avatar do vilarejo vira a própria arte, com a cor do dono
+     sobrando como anel de 2px — é o que deixa os seis vilarejos distinguíveis na lista */
+  .ph-vill .av.tok{padding:2px}
+  .ph-vill .av.tok img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
   .ph-vill .info{flex:1;min-width:0}
   .ph-vill .nm{font:500 14px/1.2 "Google Sans",Roboto,sans-serif;color:var(--text);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -699,6 +814,7 @@
      algum contraste pra não sumir sobre a arte das montanhas, mas sem chamar mais atenção que a casa */
   .nestHint{fill:#fff3cf;stroke:#6b4a1e;stroke-width:1;stroke-opacity:.7;opacity:.85;pointer-events:none}
   .villmed{filter:drop-shadow(0 3px 4px rgba(0,0,0,.55));pointer-events:none}
+  .villrim{fill:none;stroke:rgba(32,20,8,.55);stroke-width:2;pointer-events:none}
   .villowner{fill:none;stroke-width:6;
     filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));
     transition:stroke .2s var(--ease)}
@@ -896,6 +1012,25 @@
   </div>
 </div>
 
+<!-- espiada rápida nas fichas de um vilarejo: segue o mouse no hover e, no tablet,
+     aparece depois de 2s de toque contínuo. Fica fora de #stage porque é posicionada
+     em pixels reais da tela (clientX/clientY), sem o scale de 1440x900. -->
+<div id="villPeek" aria-hidden="true">
+  <div class="vpk-head">
+    <span class="dot" id="vpkDot"></span>
+    <b id="vpkName">Vilarejo</b>
+    <em id="vpkMeta"></em>
+  </div>
+  <div class="vpk-cards" id="vpkCards"></div>
+</div>
+
+<!-- explicação da carta de Magia: a arte fica na mão, o texto vem aqui, colado no ponteiro -->
+<div id="magiaPeek" aria-hidden="true">
+  <div class="mpk-title" id="mpkTitle">—</div>
+  <div class="mpk-desc" id="mpkDesc"></div>
+  <div class="mpk-act" id="mpkAct"></div>
+</div>
+
 <!-- avisos "Fulano entrou na sala": ficam acima de tudo, inclusive do lobby -->
 <div id="mpToast"></div>
 
@@ -975,6 +1110,31 @@
     <div class="plist" id="plist"></div>
     <div style="margin-top:32px;display:flex;justify-content:flex-end">
       <button class="btn" id="btnStart">Embaralhar e começar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ESCOLHA DA FICHA DE VILAREJO =================
+     Roda entre o setup/lobby e a primeira rodada: cada jogador, na ordem dos
+     assentos, escolhe uma das seis fichas. A escolhida sai da mesa para os
+     outros — duas fichas nunca se repetem na mesma partida. -->
+<div class="screen hide" id="vpick">
+  <img class="bgArt" id="vpickBg" alt="">
+  <div class="vp-card">
+    <div class="vp-head">
+      <div class="vp-titles">
+        <h2>Escolha a ficha do seu Vilarejo</h2>
+        <p class="sub">A ficha escolhida vai para o seu vilarejo no tabuleiro e sai da mesa para os outros jogadores.</p>
+      </div>
+      <div class="vp-turn" id="vpTurn">
+        <span class="av" id="vpAv">?</span>
+        <span class="who"><b id="vpName">—</b><em id="vpTag">escolhe agora</em></span>
+      </div>
+    </div>
+    <div class="vp-grid" id="vpGrid"></div>
+    <div class="vp-foot">
+      <div class="vp-dots" id="vpDots"></div>
+      <div class="vp-hint" id="vpHint">Toque na ficha que você quer para o seu vilarejo.</div>
     </div>
   </div>
 </div>
@@ -1322,7 +1482,19 @@ const CARD_RATIO=624/405;
 /* Arte do tabuleiro por estação. A arte é 16:10 e o Ninho fica exatamente no centro. */
 const ART_PRIMAVERA='assets/board/tabuleiro-primavera.jpg';
 /* arte do vilarejo (ficha redonda) e do marcador de umidade (gota) */
-const VILLAGE_IMG='assets/img/village.png';
+const VILLAGE_IMG='assets/img/village.png';   // medalhão genérico: só entra se alguém não escolher ficha
+/* Fichas de Vilarejo — os seis tokens circulares de 44 mm da arte de impressão,
+   rasterizados e recortados em círculo (assets/vilarejo/). Antes da primeira rodada
+   cada jogador escolhe a sua na tela #vpick, e a escolhida vai pro tabuleiro no lugar
+   do medalhão genérico. Duas fichas nunca se repetem na mesma partida. */
+const VILLAGE_TOKENS=[
+  {img:'assets/vilarejo/vilarejo-1.webp',name:'Fortaleza dos Ossos',   desc:'Salão de guerra erguido sobre a carcaça de um dragão.'},
+  {img:'assets/vilarejo/vilarejo-2.webp',name:'Colheita Dourada',      desc:'Currais, pomares e a fartura do fim do verão.'},
+  {img:'assets/vilarejo/vilarejo-3.webp',name:'Vila do Moinho',        desc:'Feira, pontes de pedra e a roda-d’água do rio.'},
+  {img:'assets/vilarejo/vilarejo-4.webp',name:'Forja de Lava',         desc:'Bigornas acesas nas encostas de um vulcão.'},
+  {img:'assets/vilarejo/vilarejo-5.webp',name:'Bastião dos Guardiões', desc:'Muralhas altas vigiadas por dragões de pedra.'},
+  {img:'assets/vilarejo/vilarejo-6.webp',name:'Santuário do Dragão',   desc:'Templo de runas violetas onde a chama nunca apaga.'}
+];
 const DROP_IMG='assets/img/drop.png';
 const ART_VERAO='assets/board/tabuleiro-verao.jpg';
 const ART_OUTONO='assets/board/tabuleiro-outono.jpg';
@@ -1421,7 +1593,7 @@ const EVT_CARD={sol:'assets/evt/evt-sol.webp',chuva:'assets/evt/evt-chuva.webp',
 
 const G={players:[],turn:0,mover:0,turnsDone:0,round:1,season:0,
   event:null,dragon:false,pool:[],magia:[],deck:[],
-  vill:{},water:{},broken:{},steps:0,prev:null,visited:[],phase:'setup',pinote:false,ventosUsed:false,
+  vill:{},water:{},broken:{},villTok:{},steps:0,prev:null,visited:[],phase:'setup',pinote:false,ventosUsed:false,
   pendingSteal:null,paused:false,pendingDefense:null};
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -1455,14 +1627,16 @@ drawSeats();
 const COVER_SRCS=['assets/board/capa.jpg','assets/board/capa.png','assets/board/capa.webp','assets/board/capa.jpeg'];
 (function loadCover(){
   const cover=document.getElementById('cover'),art=document.getElementById('coverArt'),
-        bg=document.getElementById('setupBg'),bg2=document.getElementById('mpBg');
+        bg=document.getElementById('setupBg'),bg2=document.getElementById('mpBg'),
+        bg3=document.getElementById('vpickBg');
   let i=0;
   (function attempt(){
     if(i>=COVER_SRCS.length){cover.classList.add('noart');return;}
     const src=COVER_SRCS[i++],probe=new Image();
     probe.onload=()=>{art.src=src;art.classList.add('on');
       if(bg){bg.src=src;bg.classList.add('on');}
-      if(bg2){bg2.src=src;bg2.classList.add('on');}};
+      if(bg2){bg2.src=src;bg2.classList.add('on');}
+      if(bg3){bg3.src=src;bg3.classList.add('on');}};
     probe.onerror=attempt;
     probe.src=src;
   })();
@@ -1494,18 +1668,125 @@ document.getElementById('autoRoundBtn').onclick=function(){
 function start(){
   buildPool();buildMagia();buildDeck(0);
   G.players=SEATS[nP].map((v,i)=>({i,name:NAMES[i],color:COLORS[i],home:'V'+v,pos:'V'+v,
-    carried:[],cards:[],skip:false,blessed:false,cursed:false}));
+    carried:[],cards:[],skip:false,blessed:false,cursed:false,villTok:null}));
   // no multiplayer cada assento passa a usar o nome que o jogador digitou no celular
   if(Net&&Net.isHost())Net.applyNames(G.players);
   // vilarejos = quantidade de jogadores: as vilas não usadas viram casas comuns da trilha
   const active=new Set(SEATS[nP]);
   VILLAGE_IDS.forEach((id,i)=>{N[id].type=active.has(i)?'village':'trail';
-    G.vill[id]=[];G.water[id]=0;G.broken[id]=false;});
+    G.vill[id]=[];G.water[id]=0;G.broken[id]=false;G.villTok[id]=null;});
   document.getElementById('setup').classList.add('hide');
+  // antes da primeira rodada, cada jogador escolhe a ficha do próprio vilarejo
+  VillagePick.open(beginMatch);
+}
+
+/* o que era o fim de start(): só roda depois que todas as fichas foram escolhidas,
+   porque drawBoard() já desenha cada vilarejo com a arte que o dono pegou */
+function beginMatch(){
   setBoardArt(G.season);drawBoard();revealEvent(true);renderAll();
+  log('Vilarejos: '+G.players.map(p=>{const t=VILLAGE_TOKENS[p.villTok];
+    return p.name+' · '+(t?t.name:'—');}).join(' | '));
   log('Partida iniciada com '+nP+' jogadores.');
   showEventReveal(G.event,startTurn);
 }
+
+/* ============================================================
+   4b. ESCOLHA DA FICHA DE VILAREJO
+   ------------------------------------------------------------
+   Roda uma vez, entre o setup/lobby e a primeira rodada, e vale para os dois
+   modos: quem escolhe é sempre a mesa (a ficha é informação pública, então não
+   faz sentido esconder no celular). Os jogadores escolhem na ordem dos assentos
+   e a ficha some da mesa assim que alguém a pega — é isso que garante que duas
+   fichas nunca se repitam na mesma partida. Bot (ou assento sem dono) sorteia
+   sozinho entre as que sobraram.
+   ============================================================ */
+const VillagePick=(function(){
+  let idx=0,done=null,busy=false,botTimer=null;
+
+  function freeTokens(){
+    return VILLAGE_TOKENS.map((t,k)=>k).filter(k=>!G.players.some(p=>p.villTok===k));
+  }
+
+  function draw(justK){
+    const grid=$('vpGrid');
+    grid.innerHTML=VILLAGE_TOKENS.map((t,k)=>{
+      const owner=G.players.find(p=>p.villTok===k);
+      const cls='vp-tok'+(owner?' taken':'')+(k===justK?' mine':'');
+      return '<button class="'+cls+'" data-k="'+k+'"'+(owner?' style="color:'+owner.color+'" disabled':'')+'>'+
+        '<span class="disc"><img src="'+t.img+'" alt="">'+
+          (owner?'<span class="vp-owner"><span class="dot" style="background:'+owner.color+'">'+
+            esc((owner.name[0]||'?').toUpperCase())+'</span><span>'+esc(owner.name)+'</span></span>':'')+
+        '</span>'+
+        '<span class="nm">'+esc(t.name)+'</span>'+
+        '<span class="ds">'+esc(t.desc)+'</span></button>';
+    }).join('');
+    grid.querySelectorAll('.vp-tok:not(.taken)').forEach(b=>{
+      b.addEventListener('pointerenter',()=>SFX.play('cardHover'));
+      b.onclick=()=>choose(+b.dataset.k);
+    });
+    $('vpDots').innerHTML=G.players.map((p,i)=>
+      '<i class="'+(p.villTok!=null?'done':(i===idx?'now':''))+'"'+
+      (p.villTok!=null||i===idx?' style="background:'+p.color+'"':'')+'></i>').join('');
+  }
+
+  function paintTurn(p){
+    const av=$('vpAv');
+    av.style.background=p?p.color:'#5f6368';
+    av.textContent=p?(p.name[0]||'?').toUpperCase():'?';
+    $('vpName').textContent=p?p.name:'—';
+    $('vpTag').textContent=p?(p.bot?'bot · escolhendo sozinho':'escolhe agora'):'pronto';
+  }
+
+  function open(after){
+    done=after;idx=0;busy=false;clearTimeout(botTimer);
+    G.players.forEach(p=>{p.villTok=null;});
+    VILLAGE_IDS.forEach(id=>{G.villTok[id]=null;});
+    $('vpick').classList.remove('hide');
+    fit();
+    step();
+  }
+
+  function step(){
+    const p=G.players[idx];
+    if(!p){finish();return;}
+    paintTurn(p);
+    draw();
+    if(p.bot){
+      $('vpHint').textContent=p.name+' está escolhendo…';
+      const free=freeTokens();
+      botTimer=setTimeout(()=>choose(free[Math.random()*free.length|0]),950);
+    }else{
+      $('vpHint').textContent='Toque na ficha que você quer para o seu vilarejo.';
+    }
+  }
+
+  function choose(k){
+    if(busy)return;
+    const p=G.players[idx],t=VILLAGE_TOKENS[k];
+    if(!p||!t)return;
+    if(G.players.some(x=>x.villTok===k))return;   // já saiu da mesa
+    busy=true;clearTimeout(botTimer);
+    p.villTok=k;G.villTok[p.home]=k;
+    SFX.play('cardPick');
+    draw(k);
+    $('vpHint').textContent=p.name+' ficou com '+t.name+'.';
+    setTimeout(()=>{busy=false;idx++;step();},620);
+  }
+
+  function finish(){
+    paintTurn(null);
+    $('vpTag').textContent='tudo escolhido';
+    $('vpHint').textContent='Fichas na mesa. Começando a partida…';
+    setTimeout(()=>{
+      $('vpick').classList.add('hide');
+      fit();
+      const cb=done;done=null;
+      if(cb)cb();
+    },900);
+  }
+
+  return {open};
+})();
 
 /* ============================================================
    5. DESENHO DO TABULEIRO
@@ -1679,16 +1960,6 @@ function treasureCardFront(k,size){
     ${cardFrameSVG(w,h,size)}
   </svg>`;
 }
-function treasureArtThumb(k,size){
-  // miniatura circular só com a arte da carta de magia, usada na lista "Cartas de Magia"
-  size=size||28;
-  const clip='trthumb_'+k+'_'+Math.random().toString(36).slice(2,7);
-  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-    <defs><clipPath id="${clip}"><circle cx="${size/2}" cy="${size/2}" r="${size/2-1}"/></clipPath></defs>
-    <circle cx="${size/2}" cy="${size/2}" r="${size/2-0.5}" fill="#fff" stroke="#c9a15a" stroke-width="1"/>
-    <image x="${-size*0.15}" y="${-size*0.05}" width="${size*1.3}" height="${size*1.6}" href="${MAGIA_IMGS[k]}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/>
-  </svg>`;
-}
 /* ---- variantes "sem <svg> aninhado", para uso dentro do próprio <svg> do tabuleiro -----
    um <svg> filho dentro de outro <svg>, quando injetado via innerHTML num elemento SVG,
    não herda a matriz de transformação do ancestral do jeito esperado nesta versão do
@@ -1753,6 +2024,14 @@ function drawBoard(){
     im.setAttribute('href',VILLAGE_IMG);
     im.setAttributeNS('http://www.w3.org/1999/xlink','href',VILLAGE_IMG);
     sym.appendChild(im);defs.appendChild(sym);
+    // uma ficha de Vilarejo por arte: o <use> de cada vilarejo aponta pra escolhida pelo dono
+    VILLAGE_TOKENS.forEach((t,k)=>{
+      const ts=el('symbol',{id:'villTokSym'+k,viewBox:'0 0 512 512'});
+      const ti=el('image',{x:0,y:0,width:512,height:512,preserveAspectRatio:'xMidYMid slice'});
+      ti.setAttribute('href',t.img);
+      ti.setAttributeNS('http://www.w3.org/1999/xlink','href',t.img);
+      ts.appendChild(ti);defs.appendChild(ts);
+    });
     const ds=el('symbol',{id:'dropSym',viewBox:'0 0 78 101'});
     const di=el('image',{x:0,y:0,width:78,height:101});
     di.setAttribute('href',DROP_IMG);
@@ -1783,12 +2062,17 @@ function drawBoard(){
   for(const id in N){const n=N[id];
     const g=el('g',{id:'node_'+id});
     if(n.type==='village'){
-      // ficha redonda de vilarejo: a arte é a mesma para todos; o dono é indicado pela borda colorida em volta
-      g.appendChild(el('circle',{cx:n.x,cy:n.y,r:VR+7,class:'villowner',id:'vo_'+id}));
-      const u=el('use',{x:n.x-VR,y:n.y-VR,width:VR*2,height:VR*2,class:'villmed'});
-      u.setAttribute('href','#villMedSym');
-      u.setAttributeNS('http://www.w3.org/1999/xlink','href','#villMedSym');
+      // ficha redonda de vilarejo: a arte é a que o dono escolheu na tela de início;
+      // o dono continua sendo indicado pela borda colorida em volta
+      g.appendChild(el('circle',{cx:n.x,cy:n.y,r:VR+5,class:'villowner',id:'vo_'+id}));
+      const tk=G.villTok[id];
+      const symId=(VILLAGE_TOKENS[tk]?'#villTokSym'+tk:'#villMedSym');
+      const u=el('use',{x:n.x-VR,y:n.y-VR,width:VR*2,height:VR*2,class:'villmed',id:'vm_'+id});
+      u.setAttribute('href',symId);
+      u.setAttributeNS('http://www.w3.org/1999/xlink','href',symId);
       g.appendChild(u);
+      // fio escuro na borda do recorte circular, pra ficha não "vazar" na arte do tabuleiro
+      g.appendChild(el('circle',{cx:n.x,cy:n.y,r:VR-0.5,class:'villrim'}));
       g.appendChild(el('circle',{cx:n.x,cy:n.y,r:VR+13,class:'halo',id:'ha_'+id}));
     }else if(n.type==='nest'){
       // o ninho já está pintado na arte: aqui só entram os realces de estado
@@ -1821,6 +2105,7 @@ function drawBoard(){
     h.addEventListener('click',()=>onNode(id));
     g.appendChild(h);gN.appendChild(g);
   }
+  VillPeek.wire(document.getElementById('board'));
   renderVillages();
 }
 
@@ -2035,7 +2320,9 @@ function renderAll(){
   const arb=$('autoRoundBtn');if(arb)arb.disabled=(G.phase==='setup'||G.phase==='auto');
   $('scores').innerHTML=G.players.map(p=>
     '<div class="score'+(p.i===G.turn?' on':'')+'"><div class="dot" style="background:'+p.color+'">'+p.name[0]+'</div>'+
-    '<div><div class="n">'+p.name+(p.bot?' 🤖':'')+(p.skip?' · parado':'')+'</div><div class="v">'+eggsOf(p)+' 🥚</div></div></div>').join('');
+    // sem contagem de ovos: o que está guardado no vilarejo fica virado para baixo
+    // até o teto desabar, então o placar não pode entregar o número
+    '<div class="n">'+p.name+(p.bot?' 🤖':'')+(p.skip?' · parado':'')+'</div></div>').join('');
   const p=G.players[G.turn];
   if(p){$('curAv').style.background=p.color;$('curAv').textContent=p.name[0];
     $('curName').textContent=p.name+(p.bot?' 🤖 (joga sozinho)':'');}
@@ -2108,6 +2395,7 @@ function openModal(html,cls){
   modal.className='modal'+(cls?' '+cls:'');
   scrim.classList.toggle('deep',cls==='plate');
   modal.innerHTML=html;scrim.classList.add('on');
+  VillPeek.hide();MagiaPeek.hide();   // nenhum cartãozinho fica preso por cima do modal
 }
 function closeModal(){scrim.classList.remove('on');}
 function openVillageModal(id){
@@ -2139,6 +2427,155 @@ function openVillageModal(id){
     });
   }
 }
+/* ============================================================
+   7b. ESPIADA NAS FICHAS DO VILAREJO (hover / toque longo)
+   ------------------------------------------------------------
+   No tabuleiro as fichas guardadas ficam num leque pequeno demais para ler. Este
+   cartão branco acompanha o ponteiro e mostra as mesmas cartas em tamanho legível:
+   no mouse, direto no hover; no tablet, depois de 2s de toque contínuo (um toque
+   curto continua sendo jogada, e abre o modal grande do vilarejo como antes).
+   É só leitura e não revela nada: ficha virada para baixo no tabuleiro continua
+   virada para baixo aqui.
+   ============================================================ */
+/* cartãozinho colado no ponteiro: posiciona em pixels reais da tela e vira de lado
+   (ou pra cima) quando não couber. Usado pela espiada do vilarejo e pela mão de Magia. */
+function placeFloater(el,x,y){
+  if(!el)return;
+  const M=10,OFF=22,w=el.offsetWidth,h=el.offsetHeight;
+  let l=x+OFF,t=y+OFF;
+  if(l+w>innerWidth-M)l=x-w-OFF;
+  if(l<M)l=Math.max(M,innerWidth-w-M);
+  if(t+h>innerHeight-M)t=y-h-OFF;
+  if(t<M)t=M;
+  el.style.left=Math.round(l)+'px';el.style.top=Math.round(t)+'px';
+}
+
+const VillPeek=(function(){
+  const HOLD=2000,MOVE_TOL=14;     // ms de toque contínuo / folga para o dedo tremer
+  let openId=null,holdTimer=null,holdFrom=null,held=false,swallowClick=false,wired=false;
+
+  function villageFrom(t){
+    if(!t||!t.closest)return null;
+    const hit=t.closest('circle.hit');
+    if(hit&&hit.id.indexOf('hit_')===0){
+      const id=hit.id.slice(4);
+      return (N[id]&&N[id].type==='village')?id:null;
+    }
+    const vg=t.closest('g[id^="villnode_"]');
+    return vg?vg.id.slice(9):null;
+  }
+
+  function paint(id){
+    const owner=G.players.find(p=>p.home===id),list=G.vill[id]||[];
+    $('vpkDot').style.background=owner?owner.color:'#bdc1c6';
+    $('vpkName').textContent=owner?('Vilarejo de '+owner.name):'Vilarejo';
+    $('vpkMeta').textContent='· '+list.length+' ficha'+(list.length===1?'':'s')+
+      ' · '+(G.water[id]||0)+' de água'+(G.broken[id]?' · teto desabou':'');
+    const cards=$('vpkCards');
+    if(!list.length){
+      cards.className='vpk-cards empty';
+      cards.textContent='Nenhuma ficha guardada aqui ainda.';
+      return;
+    }
+    cards.className='vpk-cards';
+    cards.innerHTML=list.map(t=>{
+      const shown=t.revealed||G.broken[id];
+      return '<span class="vpk-card'+(shown?'':' hidden')+'">'+
+        (shown?fichaCardFront(t.type,78):fichaCardBack(78))+
+        '<span>'+(shown?FICHA_NOME[t.type]:'virada para baixo')+'</span></span>';
+    }).join('');
+  }
+
+  function place(x,y){placeFloater($('villPeek'),x,y);}
+
+  function show(id,x,y){
+    if(!id||G.paused||revealBusy||scrim.classList.contains('on')){hide();return;}
+    const n=N[id];
+    if(!n||n.type!=='village'){hide();return;}
+    if(id!==openId){paint(id);openId=id;}
+    $('villPeek').classList.add('on');
+    place(x,y);
+  }
+
+  function hide(){
+    openId=null;
+    const el=$('villPeek');if(el)el.classList.remove('on');
+  }
+
+  function clearHold(){
+    if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+    holdFrom=null;held=false;
+  }
+
+  function wire(svg){
+    if(wired||!svg)return;
+    wired=true;
+    svg.addEventListener('pointerover',e=>{
+      if(e.pointerType!=='mouse')return;
+      show(villageFrom(e.target),e.clientX,e.clientY);
+    });
+    svg.addEventListener('pointermove',e=>{
+      if(e.pointerType==='mouse'){
+        const id=villageFrom(e.target);
+        if(id)show(id,e.clientX,e.clientY);
+        else if(openId)hide();
+        return;
+      }
+      if(holdFrom&&Math.hypot(e.clientX-holdFrom.x,e.clientY-holdFrom.y)>MOVE_TOL)clearHold();
+      if(held&&openId)place(e.clientX,e.clientY);
+    });
+    svg.addEventListener('pointerout',e=>{
+      if(e.pointerType==='mouse'&&!villageFrom(e.relatedTarget))hide();
+    });
+    svg.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='mouse')return;         // no mouse quem manda é o hover
+      const id=villageFrom(e.target);
+      if(!id)return;
+      holdFrom={x:e.clientX,y:e.clientY};
+      holdTimer=setTimeout(()=>{
+        holdTimer=null;held=true;swallowClick=true;
+        show(id,holdFrom.x,holdFrom.y);
+      },HOLD);
+    });
+    const end=()=>{clearHold();hide();};
+    svg.addEventListener('pointerup',end);
+    svg.addEventListener('pointercancel',end);
+    svg.addEventListener('pointerleave',end);
+    // depois de uma espiada por toque longo, o dedo levantando não abre o modal grande
+    svg.addEventListener('click',e=>{
+      if(!swallowClick)return;
+      swallowClick=false;
+      e.stopPropagation();e.preventDefault();
+    },true);
+  }
+
+  return {wire,hide};
+})();
+
+/* mesma ideia, para a mão de Cartas de Magia: a arte fica grande no painel e o texto
+   da carta vem aqui, colado no ponteiro, em vez de espremido ao lado de um ícone. */
+const MagiaPeek=(function(){
+  let cur=null;
+  function show(k,x,y){
+    const m=MAGIA[k];if(!m)return;
+    const el=$('magiaPeek');if(!el)return;
+    if(k!==cur){
+      $('mpkTitle').textContent=m.n;
+      $('mpkDesc').textContent=m.d;
+      const act=$('mpkAct');
+      const def=(k==='amedrontar');
+      act.className='mpk-act'+(def?' def':'');
+      act.textContent=def?'Defesa · dispara sozinha no roubo':'Clique para usar agora';
+      cur=k;
+    }
+    el.classList.add('on');
+    placeFloater(el,x,y);
+  }
+  function move(x,y){const el=$('magiaPeek');if(el&&el.classList.contains('on'))placeFloater(el,x,y);}
+  function hide(){cur=null;const el=$('magiaPeek');if(el)el.classList.remove('on');}
+  return {show,move,hide};
+})();
+
 function acts(list){return '<div class="acts">'+list.map(a=>
   '<button class="btn '+(a.ghost?'ghost ':'')+'sm" id="'+a.id+'"'+(a.dis?' disabled':'')+'>'+a.t+'</button>').join('')+'</div>';}
 
@@ -2957,37 +3394,59 @@ async function autoBump(p,alvo){
    (nunca contra Armadilha); Visão de Dragão espia 2 fichas de um vilarejo
    agora; Alagar soma 2 marcadores de água num vilarejo à escolha.
    ============================================================ */
+/* Uma mão de cartas: as artes lado a lado, sobrepostas, dentro da largura do painel.
+   A sobreposição aperta sozinha conforme a mão cresce, então 2 ou 6 cartas cabem
+   no mesmo espaço sem o painel rolar de lado. */
+const MAGIA_HAND_W=208;                   // .side (240) menos o padding de .sect (16+16)
+function magiaHandHTML(cards,W,ownerIdx,faceDown){
+  const n=cards.length;
+  const step=n>1?Math.min(Math.round(W*0.54),Math.floor((MAGIA_HAND_W-W)/(n-1))):0;
+  const ov=step-W;                        // margin-left negativo = quanto uma cobre a outra
+  return '<div class="mhand">'+cards.map((c,k)=>{
+    const def=!faceDown&&c==='amedrontar';
+    return '<button class="mcard'+(faceDown?' back':(def?' def':''))+'"'+
+      (k?' style="margin-left:'+ov+'px"':'')+
+      (faceDown?'':' data-c="'+c+'" data-p="'+ownerIdx+'" data-k="'+k+'"')+
+      ' aria-label="'+(faceDown?'Carta de Magia virada para baixo':esc(MAGIA[c].n))+'">'+
+      (faceDown?treasureCardBack(W):treasureCardFront(c,W))+'</button>';
+  }).join('')+'</div>';
+}
+
 function renderTreasures(){
   const box=$('treasures');if(!box)return;
+  const lbl=box.parentElement&&box.parentElement.querySelector('.lbl');
+  const host=Net&&Net.isHost();
   // ---- multiplayer: a mão é privada. A tablet mostra só o verso e a contagem;
   //      quem joga a carta é o dono, pelo celular. ----
-  if(Net&&Net.isHost()){
-    const lbl=box.parentElement&&box.parentElement.querySelector('.lbl');
+  if(host){
     if(lbl)lbl.textContent='Cartas de Magia · na mão de cada jogador (use pelo celular)';
     box.innerHTML=G.players.map(pl=>
       '<div class="treGroup"><div class="treHead"><span class="dot" style="background:'+pl.color+'"></span>'+
       pl.name+' · '+pl.cards.length+' carta'+(pl.cards.length!==1?'s':'')+
       (pl.cards.indexOf('amedrontar')>=0?' · tem defesa':'')+'</div>'+
-      (pl.cards.length?'<div style="display:flex;gap:6px;flex-wrap:wrap;padding:6px 0 2px">'+
-        pl.cards.map(()=>treasureCardBack(34)).join('')+'</div>'
+      (pl.cards.length?magiaHandHTML(pl.cards,62,pl.i,true)
         :'<div class="empty" style="padding:4px 0">Sem cartas</div>')+
       '</div>').join('');
-    return;
+  }else{
+    if(lbl)lbl.textContent='Cartas de Magia · qualquer jogador, a qualquer momento';
+    const withCards=G.players.filter(pl=>pl.cards.length);
+    box.innerHTML=withCards.length?withCards.map(pl=>
+      '<div class="treGroup"><div class="treHead"><span class="dot" style="background:'+pl.color+'"></span>'+
+      pl.name+'</div>'+magiaHandHTML(pl.cards,96,pl.i,false)+'</div>').join('')
+      :'<span class="empty">Nenhuma carta em nenhuma mão</span>';
   }
-  const withCards=G.players.filter(pl=>pl.cards.length);
-  box.innerHTML=withCards.length?withCards.map(pl=>{
-    const rows=pl.cards.map((c,k)=>{
-      let cls='card',badge='';
-      if(c==='amedrontar'){cls+=' shielded';badge='<span class="badge">Defesa</span>';}
-      else{cls+=' usable';badge='<span class="badge">Usar</span>';}
-      return '<div class="'+cls+'" data-p="'+pl.i+'" data-k="'+k+'">'+
-        '<div class="icwrap">'+treasureArtThumb(c,36)+'</div>'+
-        '<div><div class="ttl">'+MAGIA[c].n+'</div><div class="sub">'+MAGIA[c].d+'</div></div>'+badge+'</div>';
-    }).join('');
-    return '<div class="treGroup"><div class="treHead"><span class="dot" style="background:'+pl.color+'"></span>'+pl.name+'</div>'+rows+'</div>';
-  }).join(''):'<span class="empty">Nenhuma carta em nenhuma mão</span>';
-  box.querySelectorAll('.card.usable').forEach(elc=>{
-    elc.onclick=()=>useTreasure(+elc.dataset.p,+elc.dataset.k);
+  // hover: a carta sobe e sai da pilha, e o texto dela acompanha o ponteiro
+  box.querySelectorAll('.mcard').forEach(b=>{
+    const c=b.dataset.c;
+    b.addEventListener('pointerenter',e=>{
+      b.classList.add('on');
+      if(!c)return;
+      SFX.play('cardHover');
+      MagiaPeek.show(c,e.clientX,e.clientY);
+    });
+    b.addEventListener('pointermove',e=>{if(c)MagiaPeek.move(e.clientX,e.clientY);});
+    b.addEventListener('pointerleave',()=>{b.classList.remove('on');MagiaPeek.hide();});
+    if(c&&c!=='amedrontar')b.onclick=()=>{MagiaPeek.hide();useTreasure(+b.dataset.p,+b.dataset.k);};
   });
 }
 function useTreasure(playerIdx,k){
@@ -3437,6 +3896,7 @@ var Net=(function(){
         const open=!!G.broken[id];
         return {id,seat:owner?owner.i:-1,name:owner?owner.name:'?',
           color:owner?owner.color:'#5f6368',mine,
+          tok:G.villTok[id],          // índice em VILLAGE_TOKENS: a arte é constante no celular também
           water:G.water[id]||0,broken:open,
           cards:(G.vill[id]||[]).map(t=>({
             revealed:!!t.revealed||open,
@@ -4150,13 +4610,16 @@ var Phone=(function(){
     if(lbl)lbl.textContent=pending
       ? (pending==='visao'?'· escolha o vilarejo para espiar':'· escolha o vilarejo para alagar')
       : '· toque para ver o vilarejo de um jogador';
-    box.innerHTML=list.map(v=>
-      '<button class="ph-vill" data-v="'+v.id+'">'+
-      '<span class="av" style="background:'+v.color+'">'+esc((v.name[0]||'?').toUpperCase())+'</span>'+
+    box.innerHTML=list.map(v=>{
+      const tk=VILLAGE_TOKENS[v.tok];
+      return '<button class="ph-vill" data-v="'+v.id+'">'+
+      '<span class="av'+(tk?' tok':'')+'" style="background:'+v.color+'">'+
+        (tk?'<img src="'+tk.img+'" alt="">':esc((v.name[0]||'?').toUpperCase()))+'</span>'+
       '<span class="info"><span class="nm">'+esc(v.name)+(v.mine?'<span class="me">você</span>':'')+'</span>'+
       '<span class="sub">'+v.cards.length+' ficha'+(v.cards.length!==1?'s':'')+' · '+
       v.water+' de água'+(v.broken?' · teto desabou':'')+'</span></span>'+
-      '<span class="go">›</span></button>').join('');
+      '<span class="go">›</span></button>';
+    }).join('');
     box.querySelectorAll('.ph-vill').forEach(b=>{
       b.onclick=()=>{
         const id=b.dataset.v;

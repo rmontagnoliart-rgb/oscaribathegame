@@ -21,6 +21,8 @@ assets/
     shock.png              Ilustração de "raio" (evento Tempestade)
     village.png             Medalhão redondo de vilarejo
     drop.png                 Gota de marcador de umidade
+  vilarejo/               Fichas de Vilarejo (tokens 44 mm, recortados em círculo)
+    vilarejo-1.webp … vilarejo-6.webp
   ficha/                  Cartas das fichas do Ninho (manual novo, setembro/2026)
     ficha-ovo.webp          Frente "Ovo de Dragão"
     ficha-esterco.webp       Frente "Cocô de Dragão"
@@ -82,8 +84,69 @@ relatado antes. Agora `index.html` aponta direto para `assets/audio/dice-sound.m
 | Lógica de turno, movimento, roubo, dragão           | funções a partir de `function startTurn()`            |
 | Layout/CSS                                           | bloco `<style>` no topo do `index.html`                 |
 | Rede, salas e mao no celular                          | secoes 11 / 11b / 11c: `Net`, `MPUI`, `Phone`            |
+| Fichas de Vilarejo e a tela de escolha                 | `VILLAGE_TOKENS` / secao 4b: `VillagePick`               |
+| Espiada nas fichas de um vilarejo (hover/toque longo)  | secao 7b: `VillPeek`                                     |
+| Mão de Cartas de Magia no painel                      | `renderTreasures` / `magiaHandHTML` / `MagiaPeek`         |
 
 ## Regras implementadas (agosto/2026, com ajustes de setembro/2026 ao novo manual)
+
+### Escolha da ficha de Vilarejo
+
+Entre o setup (ou o lobby, no multiplayer) e a primeira rodada entra a tela `#vpick`:
+cada jogador, na ordem dos assentos, escolhe uma das **seis fichas de Vilarejo**
+(`VILLAGE_TOKENS` → `assets/vilarejo/vilarejo-1..6.webp`). A ficha escolhida sai da mesa
+na hora — fica cinza, com a cor e o nome do dono por cima —, então **duas fichas nunca se
+repetem na mesma partida**: com 3 jogadores há 3 vilarejos diferentes no tabuleiro, com 6
+há os 6. Bot (ou assento que perdeu o celular) sorteia sozinho entre as que sobraram.
+
+Quem escolhe é sempre a mesa, nos dois modos: a ficha é informação pública, então não há
+o que esconder no celular. Só depois que todas foram escolhidas o tabuleiro é montado
+(`VillagePick.open(beginMatch)`), porque `drawBoard()` já desenha cada vilarejo com a arte
+do dono — um `<symbol>` por ficha em `<defs>`, e um `<use>` por vilarejo apontando para o
+escolhido em `G.villTok[id]`. A borda colorida do dono continua em volta, agora colada na
+arte, com um fio escuro (`.villrim`) marcando a borda do recorte circular.
+
+Os tokens vieram dos PDFs de impressão de 44 mm (página quadrada com sangria), rasterizados
+a 512 px, recortados no círculo inscrito com alfa e salvos em WebP q82 — ~430 KB no total.
+O antigo `assets/img/village.png` virou só fallback, para o caso de um vilarejo ficar sem ficha.
+
+### Espiada nas fichas de um vilarejo
+
+O leque de fichas no tabuleiro é pequeno demais para ler as cartas. Passar o mouse por cima
+de um vilarejo abre um cartão branco que **acompanha o ponteiro** (`#villPeek`, seção 7b:
+`VillPeek`) com as mesmas fichas em tamanho legível, mais o dono, a contagem de água e o
+aviso de teto desabado. No tablet o gatilho é **segurar o toque por 2 segundos**; um toque
+curto continua fazendo o de sempre (mover para a casa, ou abrir o modal grande do vilarejo
+ao tocar no leque), e o toque que abriu a espiada não dispara esse clique.
+
+Não revela nada: ficha virada para baixo no tabuleiro continua virada aqui. O cartão vive
+fora de `#stage` porque é posicionado em pixels reais da tela (`clientX/clientY`), sem o
+scale de 1440x900, e some sozinho quando um modal abre, quando a carta de evento é revelada
+ou quando a partida está pausada.
+
+### Cartas de Magia como uma mão
+
+O painel listava as cartas como linhas de texto com um ícone de 36 px e um selo "Usar":
+dá para ler, mas não parece uma carta e o alvo do clique fica escondido. Agora cada
+jogador tem uma **mão de verdade** — as artes lado a lado, sobrepostas (`magiaHandHTML`).
+A sobreposição aperta sozinha conforme a mão cresce, então 2 ou 6 cartas ocupam a mesma
+largura de painel sem rolagem horizontal.
+
+Passar o mouse **destaca a carta** (ela sobe, cresce um pouco e sai da frente das vizinhas)
+e o texto dela vem num cartãozinho que acompanha o ponteiro (`MagiaPeek`, mesma mecânica da
+espiada do vilarejo — as duas usam `placeFloater`). Clicar usa a carta, como antes.
+**Amedrontar** fica marcada em verde e não é clicável: ela é defesa reativa e dispara
+sozinha na hora do roubo.
+
+No multiplayer a mão continua privada: a mesa mostra a mesma mão, só que com os versos e
+sem texto no hover.
+
+### Placar sem contagem de ovos
+
+Os chips do topo mostravam `nome + N 🥚`. Isso entregava informação escondida: o que está
+guardado num vilarejo fica **virado para baixo até o teto desabar**. Agora o chip mostra só
+a cor e o nome (mais `🤖` de bot e `· parado`). A contagem continua existindo em `eggsOf()`
+e aparece onde deve: no ranking final e na própria mão do jogador, no celular.
 
 ### Fluxo de turno
 
