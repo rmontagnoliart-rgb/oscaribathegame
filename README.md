@@ -87,6 +87,7 @@ relatado antes. Agora `index.html` aponta direto para `assets/audio/dice-sound.m
 | Fichas de Vilarejo e a tela de escolha                 | `VILLAGE_TOKENS` / secao 4b: `VillagePick`               |
 | Espiada nas fichas de um vilarejo (hover/toque longo)  | secao 7b: `VillPeek`                                     |
 | Mão de Cartas de Magia no painel                      | `renderTreasures` / `magiaHandHTML` / `MagiaPeek`         |
+| Dado e 1-de-3 do Ninho na tela do celular              | `G.pendingRoll` / `G.pendingNest`; `Phone.openDice/openNest` |
 
 ## Regras implementadas (agosto/2026, com ajustes de setembro/2026 ao novo manual)
 
@@ -321,6 +322,34 @@ Na versão pelo celular o ovo roubado entra na mão como `revealed:false` — a 
 que alguém carrega alguma coisa, não o quê. Esterco e Armadilha resolvem igual, mas o
 log da mesa é neutro ("vasculhou e saiu sem levar nada"); a armadilha, por ter efeito
 público, continua aparecendo.
+
+### O dado rola na mão de quem joga
+
+Na vez de um jogador com celular, o dado **não** abre mais na tablet. A mesa manda
+`roll` para aquele celular e fica com um modal de espera — *"Esperando Fulano jogar os
+dados no celular…"*, com o dado só respirando, sem clique. O celular abre `#phDice`
+(tela cheia, dado grande) e, ao toque, devolve `rollDice`.
+
+Quem sorteia continua sendo a mesa (ela é a dona do estado): ela gera o valor, devolve
+em `rollResult` e roda a mesma animação de ~1,5s nas duas telas, parando no mesmo número
+— assim quem está em volta também vê o resultado antes da espera fechar. Terminada a
+animação o modal some sozinho e o movimento segue como sempre.
+
+- **Simular jogada** cancela a espera (`cancelPendingRoll` → `rollClosed` no celular).
+- Se o celular cair no meio, a partida pausa como de costume; quando ele volta,
+  `resumeAfterPause()` reenvia o pedido do dado (e o do Ninho, se houver um pendente).
+- Bot e singleplayer não mudam nada: o dado continua na tablet.
+
+### As 3 fichas do Ninho também saem da mesa
+
+A primeira escolha do Ninho (**Ficha** ou **Magia**) continua na tablet — ela não revela
+nada. Mas as **3 fichas vinham reveladas**, então mostrá-las na mesa entregava a mão de
+quem escolheu. Agora, com celular, `pickTokens()` desvia para `pickTokensOnPhone()`: as
+três cartas vão só para aquele celular (`nestOffer`), a tela `#phNest` resolve a escolha
+ali, e a mesa fica apenas com *"Fulano está escolhendo 1 de 3 fichas no celular"*.
+
+O log da mesa diz só *"pegou uma ficha do Monte do Dragão"* — nunca qual. Se o `sendTo`
+falhar (celular fora do ar), cai no modal antigo da tablet, igual ao roubo em vilarejo.
 
 ### Partida pausada por desconexão
 

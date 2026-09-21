@@ -183,6 +183,10 @@
   .modalDie.shaking{animation:shake .32s var(--ease) infinite}
   .modalDie.landed{animation:diePop .5s var(--ease)}
   .modalDie.dissolve{opacity:0;transform:scale(1.5) rotate(8deg)}
+  /* a mesa esperando o celular: o dado não é clicável aqui, só respira */
+  .modalDie.waiting{cursor:default;animation:dieWait 1.6s ease-in-out infinite}
+  .modalDie.waiting:hover{transform:none}
+  @keyframes dieWait{0%,100%{opacity:.45;transform:scale(.96)}50%{opacity:1;transform:scale(1)}}
   @keyframes diePop{0%{transform:scale(1)}45%{transform:scale(1.4)}100%{transform:scale(1)}}
   .modal.rolling{background:transparent;box-shadow:none;padding:0;width:auto}
   .modal.rolling h2,.modal.rolling .lead{opacity:0;pointer-events:none;height:0;margin:0;overflow:hidden;transition:opacity .2s var(--ease)}
@@ -698,6 +702,55 @@
   .ph-foot{padding:26px 16px calc(env(safe-area-inset-bottom,0px) + 26px);font-size:11.5px;color:var(--text3);
     text-align:center;line-height:1.6}
 
+  /* ---------- o dado na mão do jogador (celular) ---------- */
+  /* Na sua vez o dado some da tablet e aparece aqui: a tablet fica só mostrando
+     que está esperando, e fecha sozinha quando o resultado sai. */
+  #phDice{display:none;position:fixed;inset:0;z-index:2300;flex-direction:column;
+    align-items:center;justify-content:center;gap:4px;padding:24px;
+    background:radial-gradient(ellipse at 50% 38%,#2b2318 0%,#141009 72%);color:#f4e4c0;
+    text-align:center}
+  body.phone.dicing #phDice{display:flex}
+  .phd-eyebrow{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#c3ab7a}
+  .phd-title{font:500 26px/1.2 "Google Sans",Roboto,sans-serif;color:#fff3d8;margin-top:6px}
+  .phd-die{width:132px;height:132px;border-radius:24px;background:#fff8ea;margin:30px 0 26px;
+    display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:20px;cursor:pointer;
+    box-shadow:0 16px 40px rgba(0,0,0,.6),inset 0 2px 0 rgba(255,255,255,.9);
+    transition:transform .2s var(--ease)}
+  .phd-die .pip{width:20px;height:20px;border-radius:50%;background:#2a1a06;
+    align-self:center;justify-self:center}
+  .phd-die.ready{animation:phdCall 1.8s ease-in-out infinite}
+  .phd-die.shaking{animation:shake .32s var(--ease) infinite;cursor:default}
+  .phd-die.landed{animation:diePop .5s var(--ease)}
+  @keyframes phdCall{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .phd-hint{font-size:13px;color:#c3ab7a;line-height:1.45;max-width:280px}
+
+  /* ---------- 1 de 3 fichas do Ninho (celular) ---------- */
+  /* As três vêm reveladas: mostrá-las na tablet entregaria a mão de quem escolheu,
+     então a escolha inteira acontece aqui e resolve aqui. */
+  #phNest{display:none;position:fixed;inset:0;z-index:2300;flex-direction:column;
+    align-items:center;justify-content:center;padding:24px 16px;text-align:center;
+    background:radial-gradient(ellipse at 50% 34%,#2b2318 0%,#141009 72%);color:#f4e4c0;
+    overflow-y:auto;overscroll-behavior:contain}
+  body.phone.nesting #phNest{display:flex}
+  .phn-eyebrow{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:#c3ab7a}
+  .phn-title{font:500 22px/1.25 "Google Sans",Roboto,sans-serif;color:#fff3d8;margin-top:6px}
+  .phn-hint{font-size:12.5px;line-height:1.45;color:#c3ab7a;margin-top:8px;max-width:300px}
+  .phn-row{display:flex;gap:10px;width:100%;max-width:420px;margin:22px 0 4px;
+    align-items:flex-start;justify-content:center}
+  .phn-card{flex:1 1 0;min-width:0;appearance:none;border:0;padding:0;background:none;cursor:pointer;
+    border-radius:9px;transition:transform .2s var(--ease),opacity .25s var(--ease)}
+  .phn-card svg{width:100%;height:auto;display:block;border-radius:9px;
+    box-shadow:0 6px 18px rgba(0,0,0,.55);transition:box-shadow .2s var(--ease)}
+  .phn-card:active{transform:scale(.97)}
+  .phn-row.locked .phn-card{cursor:default}
+  .phn-card.gone{opacity:0;transform:scale(.86) translateY(14px);pointer-events:none}
+  .phn-card.taken svg{box-shadow:0 12px 30px rgba(0,0,0,.6),0 0 0 3px #f0c869}
+  .phn-foot{min-height:76px;display:flex;flex-direction:column;justify-content:center;gap:5px;
+    padding-top:12px}
+  .phn-foot b{display:block;font:500 18px/1.2 "Google Sans",Roboto,sans-serif;color:#ffe9b8}
+  .phn-foot span{display:block;font-size:12.5px;line-height:1.45;color:#c3ab7a;max-width:300px;
+    margin:0 auto}
+
   /* ---------- modal de magia (celular) ---------- */
   /* A arte da carta vira o fundo; os alvos ficam embaixo, ao alcance do polegar. */
   #phMagic{display:none;position:fixed;inset:0;z-index:2200;flex-direction:column;
@@ -1176,6 +1229,23 @@
   </div>
 </div>
 
+<!-- o dado da vez, na mão do jogador: a tablet só mostra que está esperando -->
+<div id="phDice">
+  <div class="phd-eyebrow">Sua vez</div>
+  <div class="phd-title" id="phdTitle">Jogue os dados</div>
+  <div class="phd-die" id="phdDie"></div>
+  <div class="phd-hint" id="phdHint">Toque no dado para rolar.</div>
+</div>
+
+<!-- 1 de 3 fichas do Ninho: reveladas só aqui, para a mesa não ver a escolha -->
+<div id="phNest">
+  <div class="phn-eyebrow">Ninho do Dragão</div>
+  <div class="phn-title" id="phnTitle">Escolha 1 de 3 fichas</div>
+  <div class="phn-hint" id="phnHint">Só você está vendo estas cartas. As outras duas voltam ao monte.</div>
+  <div class="phn-row" id="phnRow"></div>
+  <div class="phn-foot" id="phnFoot"></div>
+</div>
+
 <!-- modal de magia: arte da carta ao fundo, alvos embaixo -->
 <div id="phMagic">
   <div class="phm-art" id="phmArt"></div>
@@ -1594,7 +1664,7 @@ const EVT_CARD={sol:'assets/evt/evt-sol.webp',chuva:'assets/evt/evt-chuva.webp',
 const G={players:[],turn:0,mover:0,turnsDone:0,round:1,season:0,
   event:null,dragon:false,pool:[],magia:[],deck:[],
   vill:{},water:{},broken:{},villTok:{},steps:0,prev:null,visited:[],phase:'setup',pinote:false,ventosUsed:false,
-  pendingSteal:null,paused:false,pendingDefense:null};
+  pendingSteal:null,paused:false,pendingDefense:null,pendingRoll:null,pendingNest:null};
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
 /* distribuição de fichas do Monte do Dragão e de Magia por número de jogadores (manual, seção 2) */
@@ -2593,6 +2663,13 @@ function startTurn(){
     return;}
   G.phase='roll';
   renderAll();
+  // multiplayer: quem tem celular rola o dado na própria tela. A mesa fica só
+  // esperando, e a espera se desfaz sozinha quando o resultado chega.
+  if(Net&&Net.isHost()&&Net.hasPhone(p.i)){
+    setState('Esperando '+p.name+' rolar o dado no celular.');
+    openRemoteTurnModal(p);
+    return;
+  }
   setState('Clique no dado para rolar. Você escolhe a rota casa a casa nas bifurcações.');
   openTurnModal(p);
   // bot: joga sozinho, sem esperar um toque no tablet. Reaproveita a mesma IA
@@ -2605,12 +2682,33 @@ function openTurnModal(p){
     '<p class="lead" style="text-align:center">Clique no dado para rolar.</p>'+
     '<div class="modalDie" id="modalDie"></div>');
   showDie(6,false,'modalDie');
-  $('modalDie').onclick=beginRollSequence;
+  $('modalDie').onclick=()=>beginRollSequence();   // sem repassar o evento como valor forçado
 }
-function beginRollSequence(){
+/* a mesa não rola nada aqui: pede o dado ao celular do jogador da vez e espera.
+   O valor continua saindo na mesa (ela é a dona do estado) — o celular só avisa
+   que o jogador rolou. */
+function openRemoteTurnModal(p){
+  SFX.play('turn');
+  G.pendingRoll={seat:p.i,done:false};
+  Net.sendTo(p.i,{t:'roll',name:p.name});
+  openModal('<h2 style="text-align:center">Vez de '+p.name+'</h2>'+
+    '<p class="lead" style="text-align:center">Esperando '+p.name+' jogar os dados no celular…</p>'+
+    '<div class="modalDie waiting" id="modalDie"></div>');
+  showDie(6,false,'modalDie');
+}
+/* desiste da espera: usado quando a mesa assume a jogada (Simular jogada) ou o
+   turno acaba por outro caminho. O celular fecha a tela do dado junto. */
+function cancelPendingRoll(){
+  const pr=G.pendingRoll;
+  if(!pr)return;
+  G.pendingRoll=null;
+  if(Net&&Net.isHost())Net.sendTo(pr.seat,{t:'rollClosed'});
+}
+function beginRollSequence(forced){
   const die=$('modalDie');
   if(!die||die.classList.contains('shaking'))return; // evita clique duplo durante a rolagem
   modal.classList.add('rolling');
+  die.classList.remove('waiting');
   die.onclick=null;die.style.cursor='default';
   die.classList.add('shaking');
   SFX.play('diceRoll');
@@ -2618,11 +2716,13 @@ function beginRollSequence(){
   const iv=setInterval(()=>{
     showDie(1+(Math.random()*6|0),false,'modalDie');
     elapsed+=100;
-    if(elapsed>=1500){clearInterval(iv);finishRoll();}
+    if(elapsed>=1500){clearInterval(iv);finishRoll(forced);}
   },100);
 }
-function finishRoll(){
-  const p=G.players[G.mover];const raw=1+(Math.random()*6|0);
+function finishRoll(forced){
+  const p=G.players[G.mover];
+  const raw=(forced!=null)?forced:1+(Math.random()*6|0);
+  G.pendingRoll=null;
   const die=$('modalDie');
   die.classList.remove('shaking');
   showDie(raw,false,'modalDie');showDie(raw,false); // sincroniza o dadinho da barra inferior também
@@ -2825,6 +2925,10 @@ function nestChoiceModal(p){
 }
 function pickTokens(){
   const three=[G.pool.pop(),G.pool.pop(),G.pool.pop()].filter(Boolean);
+  const me=G.players[G.mover];
+  // multiplayer: as 3 fichas vêm reveladas, então mostrá-las na mesa entrega a
+  // mão de quem escolheu. Com celular, a escolha acontece lá e resolve lá.
+  if(three.length&&Net&&Net.isHost()&&Net.hasPhone(me.i)&&pickTokensOnPhone(me,three))return;
   const W=180,STEP=W+30;
   // as 3 fichas nascem viradas pra cima de propósito: a escolha é estratégica, não às cegas
   openModal('<div class="cardBox">'+
@@ -2858,6 +2962,37 @@ function pickTokens(){
     };
   });
 }
+/* ---- escolha das 3 fichas do Ninho, no celular ----
+   Mesma ideia do roubo em vilarejo: a mesa manda as cartas só para o celular de
+   quem está escolhendo e fica mostrando que ele está decidindo. O tipo da ficha
+   escolhida nunca aparece no log da mesa — só que ele pegou uma. */
+function pickTokensOnPhone(p,three){
+  const ok=Net.sendTo(p.i,{t:'nestOffer',cards:three.slice()});
+  if(!ok)return false;                       // celular caiu no meio: segue na mesa
+  G.pendingNest={seat:p.i,cards:three,done:false};
+  log(p.name+' está escolhendo 1 de 3 fichas no celular.');
+  SFX.play('cardFlip');
+  openModal('<h2 style="text-align:center">Ninho do Dragão</h2>'+
+    '<p class="lead" style="text-align:center">'+p.name+
+    ' está escolhendo 1 de 3 fichas no celular. As cartas foram reveladas só para ele.</p>');
+  return true;
+}
+function resolveNestPick(seat,idx){
+  const pn=G.pendingNest;
+  if(!pn||pn.done||pn.seat!==seat)return null;
+  const three=pn.cards,t=three[idx];
+  if(!t)return null;
+  pn.done=true;G.pendingNest=null;
+  const p=G.players[seat];
+  p.carried.push({type:t,revealed:false});
+  three.forEach((x,j)=>{if(j!==idx)G.pool.push(x);});shuffle(G.pool);
+  log(p.name+' pegou uma ficha do Monte do Dragão.');   // sem dizer qual
+  SFX.play('cardPick');
+  closeModal();
+  afterAction('Ficha guardada em mãos','Volte ao seu vilarejo para depositá-la.');
+  return t;
+}
+
 /* anima uma cópia da arte da ficha "correndo" da posição do modal até o slot real em Fichas Carregadas,
    encolhendo até o tamanho de cartinha (só a arte) no destino */
 function flyFichaToCarried(type,srcRect){
@@ -3243,6 +3378,7 @@ async function autoPlayTurn(){
     if(G.phase!=='roll')return;
     modal.classList.remove('rolling');closeModal();
   }
+  cancelPendingRoll();   // se a mesa estava esperando um celular, desiste da espera
   $('autoBtn').disabled=true;
   clearDim();
   const p=G.players[G.turn];G.mover=G.turn;
@@ -3798,6 +3934,35 @@ var Net=(function(){
       SFX.play('cardFlip');
       try{c.send({t:'peek',vill:vid,reveal});}catch(_){}
       renderAll();
+      return;
+    }
+
+    /* o jogador da vez tocou no dado do celular: quem sorteia continua sendo a
+       mesa. Ela devolve o valor pro celular e roda a mesma animação, pra quem
+       está em volta ver o resultado antes da espera fechar. */
+    if(d.t==='rollDice'){
+      const st=seatOf(c);
+      const pr=G.pendingRoll;
+      if(!st||!started||!pr||pr.done||pr.seat!==st.seat)return;
+      if(G.paused||G.turn!==st.seat||G.phase!=='roll')return;
+      pr.done=true;
+      const raw=1+(Math.random()*6|0);
+      try{c.send({t:'rollResult',v:raw});}catch(_){}
+      const lead=modal.querySelector('.lead');
+      if(lead)lead.textContent=G.players[st.seat].name+' está jogando os dados…';
+      beginRollSequence(raw);
+      return;
+    }
+
+    /* 1 de 3 fichas do Ninho, escolhida no celular: a mesa aplica e devolve o
+       resultado só para quem escolheu */
+    if(d.t==='nestPick'){
+      const st=seatOf(c);
+      const pn=G.pendingNest;
+      if(!st||!started||!pn||pn.done||pn.seat!==st.seat)return;
+      const idx=+d.idx;
+      const type=resolveNestPick(st.seat,idx);
+      if(type)try{c.send({t:'nestResult',idx,type});}catch(_){}
       return;
     }
 
@@ -4382,6 +4547,14 @@ setInterval(()=>{
 
 function resumeAfterPause(){
   const p=G.players[G.turn];
+  // o celular que caiu perdeu a tela do dado: quem voltou precisa dela de novo
+  const pr=G.pendingRoll;
+  if(pr&&!pr.done&&Net&&Net.isHost()&&Net.hasPhone(pr.seat))
+    Net.sendTo(pr.seat,{t:'roll',name:G.players[pr.seat]?G.players[pr.seat].name:''});
+  // idem para a escolha das 3 fichas do Ninho
+  const pn=G.pendingNest;
+  if(pn&&!pn.done&&Net&&Net.isHost()&&Net.hasPhone(pn.seat))
+    Net.sendTo(pn.seat,{t:'nestOffer',cards:pn.cards.slice()});
   if(p&&p.bot&&G.phase==='roll')setTimeout(()=>{
     if(!G.paused&&G.turn===p.i&&G.phase==='roll')autoPlayTurn();
   },500);
@@ -4399,6 +4572,10 @@ var Phone=(function(){
   let steal=null;
   /* modal de magia aberto no momento (alvo ou defesa) */
   let magic=null;
+  /* dado da vez na tela do jogador (null = a tela do dado está fechada) */
+  let dice=null;
+  /* escolha de 1 de 3 fichas do Ninho, aberta só neste celular */
+  let nest=null;
 
   function enter(d){
     document.body.classList.add('phone');
@@ -4424,6 +4601,18 @@ var Phone=(function(){
     }else if(d.t==='over'){
       $('phTurn').className='ph-turn';
       $('phTurn').textContent='Fim de jogo — a contagem final está na tablet.';
+    }else if(d.t==='nestOffer'){
+      openNest(d.cards||[]);
+    }else if(d.t==='nestResult'){
+      landNest(d.idx,d.type);
+    }else if(d.t==='nestClosed'){
+      closeNest();
+    }else if(d.t==='roll'){
+      openDice();
+    }else if(d.t==='rollResult'){
+      landDice(d.v);
+    }else if(d.t==='rollClosed'){
+      closeDice();
     }else if(d.t==='defend'){
       openDefense(d.from);
     }else if(d.t==='defendClosed'){
@@ -4449,6 +4638,91 @@ var Phone=(function(){
       $('phTurn').textContent='A mesa foi fechada pelo administrador. Você será desconectado…';
       setTimeout(()=>location.reload(),1800);
     }
+  }
+
+  /* ---- 1 de 3 fichas do Ninho ----
+     A mesa manda as três cartas (reveladas) só para este celular; ele devolve o
+     índice escolhido e a mesa confirma em 'nestResult'. A mesa nunca diz no log
+     qual ficha saiu — só que o jogador pegou uma. */
+  function openNest(cards){
+    nest={cards:cards.slice(),sent:false,tm:null};
+    document.body.classList.add('nesting');
+    $('phnTitle').textContent='Escolha 1 de 3 fichas';
+    $('phnHint').textContent='Só você está vendo estas cartas. As outras duas voltam ao monte.';
+    $('phnFoot').innerHTML='';
+    const row=$('phnRow');
+    row.className='phn-row';
+    row.innerHTML=nest.cards.map((t,i)=>
+      '<button class="phn-card" data-i="'+i+'">'+fichaCardFront(t,200)+'</button>').join('');
+    row.querySelectorAll('.phn-card').forEach(b=>{
+      b.onclick=()=>{
+        if(!nest||nest.sent)return;
+        nest.sent=true;
+        row.classList.add('locked');
+        SFX.unlock();SFX.play('cardPick');
+        Net.send({t:'nestPick',idx:+b.dataset.i});
+      };
+    });
+  }
+  function landNest(idx,type){
+    if(!nest)return;
+    const row=$('phnRow');
+    [...row.children].forEach((c,i)=>c.classList.add(i===idx?'taken':'gone'));
+    SFX.play(type==='ovo'?'egg':type==='esterco'?'dung':'trap');
+    $('phnTitle').textContent='Ficha guardada em mãos';
+    $('phnHint').textContent='';
+    $('phnFoot').innerHTML='<b>'+esc(FICHA_NOME[type]||'Ficha')+'</b><span>'+
+      esc(FICHA_DESC[type]||'')+'</span>';
+    nest.tm=setTimeout(closeNest,2600);
+  }
+  function closeNest(){
+    if(nest)clearTimeout(nest.tm);
+    nest=null;
+    document.body.classList.remove('nesting');
+  }
+
+  /* ---- o dado da vez ----
+     A tablet manda 'roll' quando o turno abre e fica esperando. O celular só
+     avisa que o jogador rolou ('rollDice'); quem sorteia é a mesa, que devolve
+     o valor em 'rollResult'. As duas telas animam ~1,5s e param no mesmo número. */
+  function openDice(){
+    if(dice&&dice.rolling)return;                 // já está rolando: não reabre por cima
+    dice={rolling:false,iv:null,tm:null};
+    document.body.classList.add('dicing');
+    $('phdTitle').textContent='Jogue os dados';
+    $('phdHint').textContent='Toque no dado para rolar.';
+    $('phdDie').className='phd-die ready';
+    showDie(6,false,'phdDie');
+    $('phdDie').onclick=()=>{
+      if(!dice||dice.rolling)return;
+      dice.rolling=true;
+      SFX.unlock();SFX.play('diceRoll');
+      $('phdDie').className='phd-die shaking';
+      $('phdTitle').textContent='Rolando…';
+      $('phdHint').textContent='O resultado aparece aqui e no tabuleiro.';
+      dice.iv=setInterval(()=>showDie(1+(Math.random()*6|0),false,'phdDie'),100);
+      Net.send({t:'rollDice'});
+    };
+  }
+  function landDice(v){
+    if(!dice)return;
+    // a mesa leva ~1,5s chacoalhando antes de parar: o celular acompanha
+    dice.tm=setTimeout(()=>{
+      if(!dice)return;
+      clearInterval(dice.iv);dice.iv=null;
+      $('phdDie').className='phd-die landed';
+      showDie(v,false,'phdDie');
+      SFX.diceLand(v);
+      $('phdTitle').textContent='Você tirou '+v;
+      $('phdHint').textContent='Agora acompanhe o movimento no tabuleiro.';
+      dice.tm=setTimeout(closeDice,1600);
+    },1500);
+  }
+  function closeDice(){
+    if(dice){clearInterval(dice.iv);clearTimeout(dice.tm);}
+    dice=null;
+    $('phdDie').onclick=null;
+    document.body.classList.remove('dicing');
   }
 
   function lobby(d){
